@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    turbo: {
+      loaders: {
+        '.woff2': ['file-loader'],
+      },
+    },
+  },
 };
 
 export default nextConfig;
