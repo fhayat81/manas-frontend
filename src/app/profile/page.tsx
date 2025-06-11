@@ -41,7 +41,7 @@ export default function ProfilePage() {
       try {
         setError(null);
         const response = await api.getCurrentUser();
-        console.log('Profile response:', response); // Debug log
+        console.log('Profile response:', response);
         console.log("ms", response.maritalStatus);
         
         if (response) {
@@ -62,7 +62,7 @@ export default function ProfilePage() {
           };
           console.log("Updated profile data:", updatedProfileData);
           setProfileData(updatedProfileData);
-          setProfileImage(response.profilePicture ? `http://localhost:5000${response.profilePicture}` : '/images/no-profile-pic.svg');
+          setProfileImage(api.getImageUrl(response.profilePicture));
         } else {
           setError('Failed to load profile data');
         }
@@ -111,13 +111,33 @@ export default function ProfilePage() {
       formData.append('profilePicture', file);
 
       const response = await api.uploadProfilePicture(formData);
-      setProfileImage(`http://localhost:5000${response.profilePicture}`);
-      setProfileData(prev => ({ ...prev, profilePicture: response.profilePicture }));
+      if (response.profilePicture) {
+        setProfileImage(api.getImageUrl(response.profilePicture));
+        setProfileData(prev => ({ ...prev, profilePicture: response.profilePicture }));
+      } else {
+        throw new Error('No profile picture URL in response');
+      }
     } catch (err) {
       setError('Failed to upload image. Please try again.');
       console.error('Error uploading image:', err);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    try {
+      setError(null);
+      const updatedData = {
+        ...profileData,
+        profilePicture: ''
+      };
+      await api.updateProfile(updatedData);
+      setProfileImage('/images/no-profile-pic.svg');
+      setProfileData(prev => ({ ...prev, profilePicture: '/images/no-profile-pic.svg' }));
+    } catch (error: any) {
+      console.error('Error removing profile picture:', error);
+      setError(error.message || 'Failed to remove profile picture');
     }
   };
 
@@ -145,7 +165,7 @@ export default function ProfilePage() {
           country: response.country || '',
           profilePicture: response.profilePicture || ''
         });
-        setProfileImage(response.profilePicture ? `http://localhost:5000${response.profilePicture}` : '/images/no-profile-pic.svg');
+        setProfileImage(api.getImageUrl(response.profilePicture));
       }
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -200,16 +220,27 @@ export default function ProfilePage() {
               </div>
               {isEditing && (
                 <div className="flex flex-col items-center">
-                  <label className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
-                    {isUploading ? 'Uploading...' : 'Change Photo'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      disabled={isUploading}
-                    />
-                  </label>
+                  <div className="flex gap-2">
+                    <label className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                      {isUploading ? 'Uploading...' : 'Change Photo'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                    {profileData.profilePicture && !profileData.profilePicture.includes('no-profile-pic.svg') && (
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
                   <p className="mt-2 text-xs text-gray-500">
                     Max file size: 5MB. Supported formats: JPG, PNG, GIF
                   </p>

@@ -1,4 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 interface RegisterData {
   username: string;
@@ -58,6 +59,13 @@ export interface UpdateProfileData {
   country?: string;
   profilePicture?: string;
 }
+
+// Helper function to get full image URL
+const getImageUrl = (path: string) => {
+  if (!path) return '/images/no-profile-pic.svg';
+  if (path === '/images/no-profile-pic.svg') return path;
+  return `${BACKEND_URL}${path}`;
+};
 
 export const api = {
   async register(data: FormData): Promise<AuthResponse> {
@@ -126,20 +134,33 @@ export const api = {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
 
-    const response = await fetch(`${API_URL}/auth/profile`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(`${API_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to update profile');
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response:', await response.text());
+        throw new Error('Server returned non-JSON response');
+      }
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update profile');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw error;
     }
-
-    return response.json();
   },
 
   async uploadProfilePicture(formData: FormData): Promise<{ profilePicture: string }> {
@@ -148,19 +169,33 @@ export const api = {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${API_URL}/auth/upload-profile-picture`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
+    try {
+      const response = await fetch(`${API_URL}/auth/profile/picture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to upload profile picture');
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response:', await response.text());
+        throw new Error('Server returned non-JSON response');
+      }
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to upload profile picture');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Profile picture upload error:', error);
+      throw error;
     }
-
-    return response.json();
   },
+
+  getImageUrl, // Export the helper function
 }; 
