@@ -91,13 +91,13 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (max 5MB)
+    // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size should be less than 5MB');
+      setError('File size should be less than 5MB');
       return;
     }
 
-    // Check file type
+    // Check if file is an image
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file');
       return;
@@ -112,14 +112,18 @@ export default function ProfilePage() {
 
       const response = await api.uploadProfilePicture(formData);
       if (response.profilePicture) {
-        setProfileImage(api.getImageUrl(response.profilePicture));
-        setProfileData(prev => ({ ...prev, profilePicture: response.profilePicture }));
+        // Update both profileData and profileImage states
+        setProfileData(prev => ({
+          ...prev,
+          profilePicture: response.profilePicture
+        }));
+        setProfileImage(response.profilePicture); // Update the displayed image immediately
       } else {
         throw new Error('No profile picture URL in response');
       }
     } catch (err) {
-      setError('Failed to upload image. Please try again.');
-      console.error('Error uploading image:', err);
+      console.error('Error uploading profile picture:', err);
+      setError('Failed to upload profile picture');
     } finally {
       setIsUploading(false);
     }

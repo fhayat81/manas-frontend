@@ -50,7 +50,7 @@ export interface UpdateProfileData {
   username?: string;
   phone?: string;
   age?: number;
-  maritalStatus?: 'divorced' | 'widowed' | 'single' | 'married' | '';
+  maritalStatus?: 'divorced' | 'widowed' | '';
   children?: number;
   education?: 'high-school' | 'bachelors' | 'masters' | 'phd' | 'other' | '';
   address?: string;
@@ -60,9 +60,9 @@ export interface UpdateProfileData {
   profilePicture?: string;
 }
 
-// Helper function to get full image URL
-const getImageUrl = (path: string) => {
+export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '/images/no-profile-pic.svg';
+  if (path.startsWith('data:')) return path; // Return base64 image directly
   if (path === '/images/no-profile-pic.svg') return path;
   return `${BACKEND_URL}${path}`;
 };
