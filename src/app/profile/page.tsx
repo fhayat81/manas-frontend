@@ -115,7 +115,7 @@ export default function ProfilePage() {
     // Compress image before converting to base64
     const compressImage = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
-        const img = new Image();
+        const img = new window.Image();
         img.src = URL.createObjectURL(file);
         
         img.onload = () => {
