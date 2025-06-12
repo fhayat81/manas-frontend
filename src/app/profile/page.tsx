@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { api, UpdateProfileData, getImageUrl, Gender, MaritalStatus, Education } from '@/services/api';
 import { Button } from '@/components/ui/button';
@@ -313,10 +314,11 @@ export default function ProfilePage() {
                 <div className="md:col-span-2 flex flex-col items-center">
                   <div className="relative w-32 h-32 mb-4">
                     {(tempProfilePicture || profilePicture) ? (
-                      <img
+                      <Image
                         src={tempProfilePicture || getImageUrl(profilePicture)}
                         alt="Profile"
-                        className="w-full h-full rounded-full object-cover"
+                        fill
+                        className="rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">

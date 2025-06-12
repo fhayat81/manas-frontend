@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -191,6 +192,7 @@ export default function Register() {
         throw new Error('Please fill in all location fields');
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirm_password, ...registrationData } = formData;
       
       // Format data for API
@@ -239,10 +241,11 @@ export default function Register() {
             {/* Profile Photo Upload */}
             <div className="flex flex-col items-center space-y-4">
               <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
-                <img
+                <Image
                   src={tempProfilePicture || '/default-avatar.png'}
                   alt="Profile"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
               <div className="flex space-x-4">
