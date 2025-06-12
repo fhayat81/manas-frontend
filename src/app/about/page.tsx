@@ -112,7 +112,7 @@ export default function About() {
             <div className="bg-indigo-50 rounded-lg p-8">
               <h3 className="text-2xl font-semibold text-gray-900">Community Reach</h3>
               <p className="mt-4 text-gray-500">
-                Our programs and services have reached women in over 50 cities across the country. Through workshops, support groups, and networking events, we've created a nationwide community of support and empowerment.
+                Our programs and services have reached women in over 50 cities across the country. Through workshops, support groups, and networking events, we&apos;ve created a nationwide community of support and empowerment.
               </p>
             </div>
           </div>

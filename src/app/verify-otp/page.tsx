@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -122,7 +121,7 @@ export default function VerifyOTP() {
                   disabled={loading}
                   className="text-indigo-600 hover:text-indigo-500 text-sm"
                 >
-                  Didn't receive the code? Resend
+                  Didn&apos;t receive the code? Resend
                 </button>
               </div>
             </form>

@@ -14,7 +14,6 @@ import Navbar from '@/components/Navbar';
 export default function ProfilePage() {
   const router = useRouter();
   const { user: authUser, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
@@ -33,8 +32,6 @@ export default function ProfilePage() {
     },
     children_count: authUser?.children_count
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!authLoading && !authUser) {
@@ -185,8 +182,6 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     try {
       console.log('Starting profile update...');
@@ -246,7 +241,7 @@ export default function ProfilePage() {
       // Check if we have any changes
       if (!hasChanges) {
         console.warn('No changes detected in form data');
-        setError('No changes to save');
+        toast.error('No changes to save');
         return;
       }
 
@@ -260,12 +255,10 @@ export default function ProfilePage() {
       setProfilePicture(response.profile_photo || null);
       setTempProfilePicture(null);
       setIsEditing(false);
-      setSuccess('Profile updated successfully');
       toast.success('Profile updated successfully');
 
     } catch (error) {
       console.error('Profile update error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update profile');
       toast.error('Failed to update profile');
     }
   };
@@ -342,15 +335,13 @@ export default function ProfilePage() {
                           onChange={handleProfilePictureChange}
                           className="hidden"
                           id="profile-picture"
-                          disabled={loading}
                         />
                         <Button
                           type="button"
                           className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white"
-                          disabled={loading}
                           onClick={() => document.getElementById('profile-picture')?.click()}
                         >
-                          {loading ? 'Uploading...' : 'Change Photo'}
+                          Change Photo
                         </Button>
                       </div>
                       {(tempProfilePicture || profilePicture) && (
@@ -359,7 +350,6 @@ export default function ProfilePage() {
                           variant="outline"
                           className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={handleRemovePhoto}
-                          disabled={loading}
                         >
                           Remove Photo
                         </Button>
@@ -376,7 +366,7 @@ export default function ProfilePage() {
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -388,7 +378,7 @@ export default function ProfilePage() {
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -401,7 +391,7 @@ export default function ProfilePage() {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -415,7 +405,7 @@ export default function ProfilePage() {
                     min="18"
                     value={formData.age || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -427,7 +417,7 @@ export default function ProfilePage() {
                     name="gender"
                     value={formData.gender || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   >
                     <option value="">Select gender</option>
@@ -443,7 +433,7 @@ export default function ProfilePage() {
                     name="marital_status"
                     value={formData.marital_status || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   >
                     <option value="">Select status</option>
@@ -459,13 +449,13 @@ export default function ProfilePage() {
                     name="education"
                     value={formData.education || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   >
                     <option value="">Select education</option>
                     <option value={Education.HIGH_SCHOOL}>High School</option>
-                    <option value={Education.BACHELORS}>Bachelor's</option>
-                    <option value={Education.MASTERS}>Master's</option>
+                    <option value={Education.BACHELORS}>Bachelor&apos;s</option>
+                    <option value={Education.MASTERS}>Master&apos;s</option>
                     <option value={Education.PHD}>PhD</option>
                   </Select>
                 </div>
@@ -479,7 +469,7 @@ export default function ProfilePage() {
                     min="0"
                     value={formData.children_count ?? 0}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -492,7 +482,7 @@ export default function ProfilePage() {
                     name="location.address"
                     value={formData.location?.address || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -504,7 +494,7 @@ export default function ProfilePage() {
                     name="location.city"
                     value={formData.location?.city || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -516,7 +506,7 @@ export default function ProfilePage() {
                     name="location.country"
                     value={formData.location?.country || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing || loading}
+                    disabled={!isEditing}
                     className="bg-gray-50"
                   />
                 </div>
@@ -528,16 +518,14 @@ export default function ProfilePage() {
                     type="button"
                     variant="outline"
                     onClick={handleCancel}
-                    disabled={loading}
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    disabled={loading}
                     className="bg-indigo-600 hover:bg-indigo-700"
                   >
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    Save Changes
                   </Button>
                 </div>
               )}

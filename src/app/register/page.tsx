@@ -3,15 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
-import { api } from '@/services/api';
 import { Gender, MaritalStatus, Education, RegisterData } from '@/services/api';
 
 interface RegisterFormData {
@@ -36,7 +33,6 @@ interface RegisterFormData {
 export default function Register() {
   const router = useRouter();
   const { register } = useAuth();
-  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterFormData>({
     username: '',
@@ -57,7 +53,6 @@ export default function Register() {
     profile_photo: null
   });
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -175,7 +170,6 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -221,7 +215,6 @@ export default function Register() {
     } catch (err) {
       console.error('Form validation error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -418,8 +411,8 @@ export default function Register() {
                   <option value={Education.NONE}>None</option>
                   <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
                   <option value={Education.HIGH_SCHOOL}>High School</option>
-                  <option value={Education.BACHELORS}>Bachelor's Degree</option>
-                  <option value={Education.MASTERS}>Master's Degree</option>
+                  <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
+                  <option value={Education.MASTERS}>Master&apos;s Degree</option>
                   <option value={Education.PHD}>PhD</option>
                 </Select>
               </div>
