@@ -2,17 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '@/context/AuthContext';
+import { Toaster } from 'sonner';
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: 'swap',
-  preload: true,
-  fallback: ['system-ui', 'arial'],
-});
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "MANAS Foundation - Empowering Lives Through Connections",
-  description: "Breaking social barriers and creating a supportive community where widows and divorced women find dignity, hope, and new beginnings through compassionate matchmaking.",
+  title: "Manas - Find Your Perfect Match",
+  description: "A platform for finding meaningful connections and relationships.",
 };
 
 export default function RootLayout({
@@ -22,11 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans">
         <AuthProvider>
           <main className="min-h-screen bg-white">
             {children}
           </main>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

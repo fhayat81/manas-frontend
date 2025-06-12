@@ -1,432 +1,544 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { api, UpdateProfileData } from '@/services/api';
+import { api, UpdateProfileData, getImageUrl, Gender, MaritalStatus, Education } from '@/services/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
-import Image from 'next/image';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, loading } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: authUser, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState<UpdateProfileData>({
-    name: '',
-    email: '',
-    username: '',
-    phone: '',
-    age: 0,
-    maritalStatus: '',
-    children: 0,
-    education: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    profilePicture: ''
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
+  const [formData, setFormData] = useState<UpdateProfileData>({
+    username: authUser?.username || '',
+    full_name: authUser?.full_name || '',
+    email: authUser?.email || '',
+    age: authUser?.age,
+    gender: authUser?.gender,
+    marital_status: authUser?.marital_status,
+    education: authUser?.education,
+    location: {
+      address: authUser?.location?.address || '',
+      city: authUser?.location?.city || '',
+      country: authUser?.location?.country || ''
+    },
+    children_count: authUser?.children_count
   });
-  const [profileImage, setProfileImage] = useState<string>('/images/no-profile-pic.svg');
-  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!authLoading && !authUser) {
       router.push('/login');
-      return;
+    } else if (authUser) {
+      setFormData({
+        username: authUser.username || '',
+        full_name: authUser.full_name || '',
+        email: authUser.email || '',
+        age: authUser.age,
+        gender: authUser.gender,
+        marital_status: authUser.marital_status,
+        education: authUser.education,
+        location: {
+          address: authUser.location?.address || '',
+          city: authUser.location?.city || '',
+          country: authUser.location?.country || ''
+        },
+        children_count: authUser.children_count
+      });
+      setProfilePicture(authUser.profile_photo || null);
+      setTempProfilePicture(null);
     }
-
-    const fetchProfile = async () => {
-      try {
-        setError(null);
-        const response = await api.getCurrentUser();
-        console.log('Profile response:', response);
-        console.log("ms", response.maritalStatus);
-        
-        if (response) {
-          const updatedProfileData = {
-            name: response.name || '',
-            email: response.email || '',
-            username: response.username || '',
-            phone: response.phone || '',
-            age: response.age || 0,
-            maritalStatus: response.maritalStatus || '',
-            children: response.children || 0,
-            education: response.education || '',
-            address: response.address || '',
-            city: response.city || '',
-            state: response.state || '',
-            country: response.country || '',
-            profilePicture: response.profilePicture || ''
-          };
-          console.log("Updated profile data:", updatedProfileData);
-          setProfileData(updatedProfileData);
-          setProfileImage(api.getImageUrl(response.profilePicture));
-        } else {
-          setError('Failed to load profile data');
-        }
-      } catch (error: any) {
-        console.error('Error fetching profile:', error);
-        setError(error.message || 'Failed to load profile data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchProfile();
-    }
-  }, [isAuthenticated, loading, router]);
+  }, [authUser, authLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [name]: name === 'age' || name === 'children' ? parseInt(value) || 0 : value
-    }));
+    if (name.startsWith('location.')) {
+      const locationKey = name.split('.')[1] as keyof typeof formData.location;
+      setFormData(prev => ({
+        ...prev,
+        location: {
+          ...(prev.location || { address: '', city: '', country: '' }),
+          [locationKey]: value
+        }
+      }));
+    } else if (name === 'age' || name === 'children_count') {
+      // Handle numeric fields
+      const numValue = Number(value);
+      if (isNaN(numValue)) {
+        toast.error(`${name === 'age' ? 'Age' : 'Children count'} must be a number`);
+        return;
+      }
+      if (name === 'age' && numValue < 18) {
+        toast.error('Age must be at least 18');
+        return;
+      }
+      if (name === 'children_count' && numValue < 0) {
+        toast.error('Children count cannot be negative');
+        return;
+      }
+      setFormData(prev => ({
+        ...prev,
+        [name]: numValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (5MB limit)
+    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setError('File size should be less than 5MB');
+      toast.error('Profile picture must be less than 5MB');
       return;
     }
 
-    // Check if file is an image
+    // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file');
+      toast.error('Please upload an image file');
       return;
     }
+
+    // Compress image before converting to base64
+    const compressImage = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        
+        img.onload = () => {
+          // Create canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+
+          // Calculate new dimensions (max 800px width/height)
+          let width = img.width;
+          let height = img.height;
+          const maxSize = 800;
+          
+          if (width > height && width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          } else if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+
+          // Set canvas dimensions
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw and compress image
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to base64 with reduced quality
+          const base64String = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+          resolve(base64String);
+        };
+
+        img.onerror = () => {
+          reject(new Error('Failed to load image'));
+        };
+      });
+    };
 
     try {
-      setIsUploading(true);
-      setError('');
-
-      const formData = new FormData();
-      formData.append('profilePicture', file);
-
-      const response = await api.uploadProfilePicture(formData);
-      if (response.profilePicture) {
-        // Update both profileData and profileImage states
-        setProfileData(prev => ({
-          ...prev,
-          profilePicture: response.profilePicture
-        }));
-        setProfileImage(response.profilePicture); // Update the displayed image immediately
-      } else {
-        throw new Error('No profile picture URL in response');
-      }
-    } catch (err) {
-      console.error('Error uploading profile picture:', err);
-      setError('Failed to upload profile picture');
-    } finally {
-      setIsUploading(false);
+      const compressedBase64 = await compressImage(file);
+      setTempProfilePicture(compressedBase64);
+      // Update form data with the compressed profile photo
+      setFormData(prev => ({
+        ...prev,
+        profile_photo: compressedBase64
+      }));
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast.error('Failed to process image');
     }
   };
 
-  const handleRemovePhoto = async () => {
-    try {
-      setError(null);
-      const updatedData = {
-        ...profileData,
-        profilePicture: ''
-      };
-      await api.updateProfile(updatedData);
-      setProfileImage('/images/no-profile-pic.svg');
-      setProfileData(prev => ({ ...prev, profilePicture: '/images/no-profile-pic.svg' }));
-    } catch (error: any) {
-      console.error('Error removing profile picture:', error);
-      setError(error.message || 'Failed to remove profile picture');
-    }
+  const handleRemovePhoto = () => {
+    setTempProfilePicture('');
+    // Update form data to remove profile photo
+    setFormData(prev => ({
+      ...prev,
+      profile_photo: ''
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+
     try {
-      setError(null);
-      await api.updateProfile(profileData);
-      setIsEditing(false);
-      // Refresh profile data after update
-      const response = await api.getCurrentUser();
-      if (response) {
-        setProfileData({
-          name: response.name || '',
-          email: response.email || '',
-          username: response.username || '',
-          phone: response.phone || '',
-          age: response.age || 0,
-          maritalStatus: response.maritalStatus || '',
-          children: response.children || 0,
-          education: response.education || '',
-          address: response.address || '',
-          city: response.city || '',
-          state: response.state || '',
-          country: response.country || '',
-          profilePicture: response.profilePicture || ''
-        });
-        setProfileImage(api.getImageUrl(response.profilePicture));
+      console.log('Starting profile update...');
+      console.log('Current form data:', formData);
+
+      const updateData: UpdateProfileData = {};
+      let hasChanges = false;
+
+      // Process each field
+      Object.entries(formData).forEach(([key, value]) => {
+        // Skip empty values except for profile_photo
+        if (value === '' && key !== 'profile_photo') return;
+
+        // Handle location fields
+        if (key === 'location' && typeof value === 'object') {
+          const location = value as { address: string; city: string; country: string };
+          if (location.address || location.city || location.country) {
+            updateData.location = {
+              address: location.address || '',
+              city: location.city || '',
+              country: location.country || ''
+            };
+            hasChanges = true;
+            console.log('Added location fields:', updateData.location);
+          }
+          return;
+        }
+
+        // Handle numeric fields
+        if (key === 'age' || key === 'children_count') {
+          const numValue = Number(value);
+          if (!isNaN(numValue)) {
+            updateData[key as 'age' | 'children_count'] = numValue;
+            hasChanges = true;
+            console.log(`Added numeric field ${key}:`, numValue);
+          }
+          return;
+        }
+
+        // Handle profile photo
+        if (key === 'profile_photo') {
+          updateData.profile_photo = value.toString();
+          hasChanges = true;
+          console.log('Added profile photo:', value ? 'has value' : 'empty');
+          return;
+        }
+
+        // Handle other fields
+        if (key === 'username' || key === 'full_name' || key === 'email' || 
+            key === 'gender' || key === 'marital_status' || key === 'education') {
+          updateData[key] = value.toString();
+          hasChanges = true;
+          console.log(`Added field ${key}:`, value);
+        }
+      });
+
+      // Check if we have any changes
+      if (!hasChanges) {
+        console.warn('No changes detected in form data');
+        setError('No changes to save');
+        return;
       }
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      setError(error.message || 'Failed to update profile');
+
+      console.log('Sending profile update request with data:', updateData);
+
+      // Send the update request
+      const response = await api.updateProfile(updateData);
+      console.log('Profile update response:', response);
+
+      // Update local state
+      setProfilePicture(response.profile_photo || null);
+      setTempProfilePicture(null);
+      setIsEditing(false);
+      setSuccess('Profile updated successfully');
+      toast.success('Profile updated successfully');
+
+    } catch (error) {
+      console.error('Profile update error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update profile');
+      toast.error('Failed to update profile');
     }
   };
 
-  if (loading || isLoading) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen pt-20 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-        </div>
-      </>
-    );
-  }
+  const handleCancel = () => {
+    if (authUser) {
+      setFormData({
+        username: authUser.username || '',
+        full_name: authUser.full_name || '',
+        email: authUser.email || '',
+        age: authUser.age,
+        gender: authUser.gender,
+        marital_status: authUser.marital_status,
+        education: authUser.education,
+        location: {
+          address: authUser.location?.address || '',
+          city: authUser.location?.city || '',
+          country: authUser.location?.country || ''
+        },
+        children_count: authUser.children_count
+      });
+    }
+    setTempProfilePicture(null);
+    setIsEditing(false);
+  };
 
-  if (!isAuthenticated) {
-    return null;
+  if (authLoading) {
+    return <div>Loading...</div>;
   }
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-20 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-600 rounded-md hover:bg-indigo-50"
-              >
-                {isEditing ? 'Cancel' : 'Edit Profile'}
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center mb-8">
-              <div className="relative w-32 h-32 mb-4">
-                <Image
-                  src={profileImage}
-                  alt="Profile"
-                  fill
-                  className="rounded-full object-cover"
-                />
-              </div>
-              {isEditing && (
-                <div className="flex flex-col items-center">
-                  <div className="flex gap-2">
-                    <label className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
-                      {isUploading ? 'Uploading...' : 'Change Photo'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={isUploading}
-                      />
-                    </label>
-                    {profileData.profilePicture && !profileData.profilePicture.includes('no-profile-pic.svg') && (
-                      <button
-                        type="button"
-                        onClick={handleRemovePhoto}
-                        className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        Remove Photo
-                      </button>
-                    )}
-                  </div>
-                  <p className="mt-2 text-xs text-gray-500">
-                    Max file size: 5MB. Supported formats: JPG, PNG, GIF
-                  </p>
-                </div>
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white shadow rounded-lg p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold text-indigo-600">Profile</h1>
+              {!isEditing && (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Edit Profile
+                </Button>
               )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={profileData.name || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your name"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
-                  />
+                {/* Profile Picture */}
+                <div className="md:col-span-2 flex flex-col items-center">
+                  <div className="relative w-32 h-32 mb-4">
+                    {(tempProfilePicture || profilePicture) ? (
+                      <img
+                        src={tempProfilePicture || getImageUrl(profilePicture)}
+                        alt="Profile"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400 text-4xl">
+                          {formData.full_name?.charAt(0) || '?'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {isEditing && (
+                    <div className="flex gap-4">
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePictureChange}
+                          className="hidden"
+                          id="profile-picture"
+                          disabled={loading}
+                        />
+                        <Button
+                          type="button"
+                          className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white"
+                          disabled={loading}
+                          onClick={() => document.getElementById('profile-picture')?.click()}
+                        >
+                          {loading ? 'Uploading...' : 'Change Photo'}
+                        </Button>
+                      </div>
+                      {(tempProfilePicture || profilePicture) && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={handleRemovePhoto}
+                          disabled={loading}
+                        >
+                          Remove Photo
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profileData.email || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your email"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Username</label>
-                  <input
-                    type="text"
+                {/* Basic Information */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
                     name="username"
-                    value={profileData.username || ''}
+                    value={formData.username}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your username"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={profileData.phone || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your phone number"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Age</label>
-                  <input
-                    type="number"
-                    name="age"
-                    value={profileData.age || 0}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your age"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Marital Status</label>
-                  <select
-                    id="maritalStatus"
-                    name="maritalStatus"
-                    value={profileData.maritalStatus}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-gray-900 placeholder-gray-400 disabled:bg-gray-50 text-sm"
-                    disabled={!isEditing}
-                  >
-                    <option value="">Select status</option>
-                    <option value="divorced">Divorced</option>
-                    <option value="widow">Widow</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Number of Children</label>
-                  <input
-                    type="number"
-                    name="children"
-                    value={profileData.children || 0}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter number of children"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Education</label>
-                  <select
-                    id="education"
-                    name="education"
-                    value={profileData.education}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-gray-900 placeholder-gray-400 disabled:bg-gray-50 text-sm"
-                    disabled={!isEditing}
-                  >
-                    <option value="high_school">High School</option>
-                    <option value="bachelors">Bachelor's Degree</option>
-                    <option value="masters">Master's Degree</option>
-                    <option value="phd">PhD</option>
-                    <option value="other">Other</option>
-                  </select>
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={profileData.address || ''}
+                  <Label htmlFor="full_name">Full Name</Label>
+                  <Input
+                    id="full_name"
+                    name="full_name"
+                    value={formData.full_name}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your address"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700">City</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={profileData.city || ''}
+                  <Label htmlFor="age">Age</Label>
+                  <Input
+                    id="age"
+                    name="age"
+                    type="number"
+                    min="18"
+                    value={formData.age || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your city"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700">State</label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={profileData.state || ''}
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your state"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
+                  >
+                    <option value="">Select gender</option>
+                    <option value={Gender.MALE}>Male</option>
+                    <option value={Gender.FEMALE}>Female</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="marital_status">Marital Status</Label>
+                  <Select
+                    id="marital_status"
+                    name="marital_status"
+                    value={formData.marital_status || ''}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
+                  >
+                    <option value="">Select status</option>
+                    <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
+                    <option value={MaritalStatus.WIDOW}>Widow</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="education">Education</Label>
+                  <Select
+                    id="education"
+                    name="education"
+                    value={formData.education || ''}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
+                  >
+                    <option value="">Select education</option>
+                    <option value={Education.HIGH_SCHOOL}>High School</option>
+                    <option value={Education.BACHELORS}>Bachelor's</option>
+                    <option value={Education.MASTERS}>Master's</option>
+                    <option value={Education.PHD}>PhD</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="children_count">Number of Children</Label>
+                  <Input
+                    id="children_count"
+                    name="children_count"
+                    type="number"
+                    min="0"
+                    value={formData.children_count ?? 0}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
+                  />
+                </div>
+
+                {/* Location Information */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="location.address">Address</Label>
+                  <Input
+                    id="location.address"
+                    name="location.address"
+                    value={formData.location?.address || ''}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700">Country</label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={profileData.country || ''}
+                  <Label htmlFor="location.city">City</Label>
+                  <Input
+                    id="location.city"
+                    name="location.city"
+                    value={formData.location?.city || ''}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your country"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location.country">Country</Label>
+                  <Input
+                    id="location.country"
+                    name="location.country"
+                    value={formData.location?.country || ''}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || loading}
+                    className="bg-gray-50"
                   />
                 </div>
               </div>
 
               {isEditing && (
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                <div className="flex justify-end space-x-4 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={loading}
                   >
-                    Save Changes
-                  </button>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
                 </div>
               )}
             </form>

@@ -1,75 +1,176 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
-import Navbar from '@/components/Navbar';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { toast } from 'sonner';
+import Navbar from '@/components/Navbar';
+import { api } from '@/services/api';
+import { Gender, MaritalStatus, Education, RegisterData } from '@/services/api';
+
+interface RegisterFormData {
+  username: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  full_name: string;
+  age: string;
+  gender: string;
+  marital_status: string;
+  education: string;
+  location: {
+    address: string;
+    city: string;
+    country: string;
+  };
+  children_count: string;
+  profile_photo: string | null;
+}
 
 export default function Register() {
   const router = useRouter();
   const { register } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    age: '',
-    maritalStatus: 'divorced',
-    children: '',
-    education: 'high-school',
-    address: '',
-    city: '',
-    state: '',
-    country: ''
-  });
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
-  const [profileImage, setProfileImage] = useState<string>('/images/no-profile-pic.svg');
-  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState<RegisterFormData>({
+    username: '',
+    email: '',
+    password: '',
+    confirm_password: '',
+    full_name: '',
+    age: '',
+    gender: '',
+    marital_status: '',
+    education: '',
+    location: {
+      address: '',
+      city: '',
+      country: ''
+    },
+    children_count: '0',
+    profile_photo: null
+  });
+  const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name.startsWith('location.')) {
+      const locationField = name.split('.')[1];
+      setFormData((prev: RegisterFormData) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          [locationField]: value
+        }
+      }));
+    } else {
+      setFormData((prev: RegisterFormData) => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (max 5MB)
+    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size should be less than 5MB');
+      toast.error('Profile picture must be less than 5MB');
       return;
     }
 
-    // Check file type
+    // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file');
+      toast.error('Please upload an image file');
       return;
     }
+
+    // Compress image before converting to base64
+    const compressImage = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new window.Image();
+          img.onload = () => {
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              reject(new Error('Could not get canvas context'));
+              return;
+            }
+
+            // Calculate new dimensions (max 800px width/height)
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 800;
+            
+            if (width > height && width > maxSize) {
+              height = Math.round((height * maxSize) / width);
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = Math.round((width * maxSize) / height);
+              height = maxSize;
+            }
+
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw and compress image
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to base64 with reduced quality
+            const base64String = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+            resolve(base64String);
+          };
+          img.onerror = () => {
+            reject(new Error('Failed to load image'));
+          };
+          img.src = e.target?.result as string;
+        };
+        reader.onerror = () => {
+          reject(new Error('Failed to read file'));
+        };
+        reader.readAsDataURL(file);
+      });
+    };
 
     try {
-      setIsUploading(true);
-      setError('');
-
-      // Create a temporary URL for preview
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-      setProfilePicture(file);
-    } catch (err) {
-      setError('Failed to process image. Please try again.');
-      console.error('Error processing image:', err);
-    } finally {
-      setIsUploading(false);
+      const compressedBase64 = await compressImage(file);
+      setTempProfilePicture(compressedBase64);
+      // Update form data with the compressed profile photo
+      setFormData((prev: RegisterFormData) => ({
+        ...prev,
+        profile_photo: compressedBase64
+      }));
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast.error('Failed to process image');
     }
+  };
+
+  const handleRemovePhoto = () => {
+    setTempProfilePicture(null);
+    setFormData((prev: RegisterFormData) => ({
+      ...prev,
+      profile_photo: null
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,355 +178,337 @@ export default function Register() {
     setError('');
     setLoading(true);
 
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const { confirmPassword, ...registrationData } = formData;
-
-      // Create FormData for multipart/form-data
-      const formDataToSend = new FormData();
-      
-      // Append all text fields
-      Object.entries(registrationData).forEach(([key, value]) => {
-        if (value) formDataToSend.append(key, value);
-      });
-
-      // Append profile picture if exists
-      if (profilePicture) {
-        formDataToSend.append('profilePicture', profilePicture);
+      // Validate passwords match
+      if (formData.password !== formData.confirm_password) {
+        throw new Error('Passwords do not match');
       }
 
-      await register(formDataToSend);
-      router.push('/profile');
-    } catch (error: any) {
-      setError(error.message || 'Registration failed. Please try again.');
+      // Validate required fields
+      const requiredFields = ['username', 'email', 'password', 'full_name', 'age', 'gender', 'marital_status', 'education'];
+      const missingFields = requiredFields.filter(field => !formData[field as keyof RegisterFormData]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      }
+
+      // Validate location fields
+      if (!formData.location.address || !formData.location.city || !formData.location.country) {
+        throw new Error('Please fill in all location fields');
+      }
+
+      const { confirm_password, ...registrationData } = formData;
+      
+      // Format data for API
+      const formattedData: RegisterData = {
+        ...registrationData,
+        age: parseInt(registrationData.age),
+        children_count: parseInt(registrationData.children_count),
+        gender: registrationData.gender as Gender,
+        marital_status: registrationData.marital_status as MaritalStatus,
+        education: registrationData.education as Education,
+        location: {
+          address: registrationData.location.address,
+          city: registrationData.location.city,
+          country: registrationData.location.country
+        },
+        profile_photo: registrationData.profile_photo || '' // Convert null to empty string
+      };
+
+      await register(formattedData);
+      toast.success('Registration successful!');
+      router.push('/login');
+    } catch (err) {
+      console.error('Form validation error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const inputStyles = "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-gray-900 placeholder-gray-400";
+  if (!mounted) {
+    return null; // Return null on server-side to prevent hydration mismatch
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white shadow rounded-lg p-8">
-            <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Create an Account</h1>
-            
-            {error && (
-              <div className="mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                {error}
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Create your account
+        </h2>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Profile Photo Upload */}
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
+                <img
+                  src={tempProfilePicture || '/default-avatar.png'}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="flex flex-col items-center mb-8">
-                <div className="relative w-32 h-32 mb-4">
-                  <Image
-                    src={profileImage}
-                    alt="Profile"
-                    fill
-                    className="rounded-full object-cover"
+              <div className="flex space-x-4">
+                <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureChange}
+                    className="hidden"
                   />
-                </div>
-                <div className="flex flex-col items-center">
-                  <label className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
-                    {isUploading ? 'Uploading...' : 'Add Profile Picture (Optional)'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      disabled={isUploading}
-                    />
-                  </label>
-                  <p className="mt-2 text-xs text-gray-500">
-                    Max file size: 5MB. Supported formats: JPG, PNG, GIF
-                  </p>
-                </div>
+                </label>
+                {tempProfilePicture && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Enter your name"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Enter your email"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Username</label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Choose a username"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                    minLength={6}
-                    placeholder="Create a password"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    required
-                    minLength={6}
-                    placeholder="Confirm your password"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700">Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="Enter your phone number"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-3 text-sm text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                {/* Age */}
-                <div>
-                  <label htmlFor="age" className="block text-xs font-medium text-gray-700">
-                    Age *
-                  </label>
-                  <input
-                    type="number"
-                    name="age"
-                    id="age"
-                    required
-                    min="18"
-                    value={formData.age}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                    placeholder="Enter your age"
-                  />
-                </div>
-
-                {/* Marital Status */}
-                <div>
-                  <label htmlFor="maritalStatus" className="block text-xs font-medium text-gray-700">
-                    Marital Status *
-                  </label>
-                  <select
-                    name="maritalStatus"
-                    id="maritalStatus"
-                    required
-                    value={formData.maritalStatus}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                  >
-                    <option value="">Select status</option>
-                    <option value="widow">Widow</option>
-                    <option value="divorced">Divorced</option>
-                  </select>
-                </div>
-
-                {/* Children */}
-                <div>
-                  <label htmlFor="children" className="block text-xs font-medium text-gray-700">
-                    Number of Children *
-                  </label>
-                  <input
-                    type="number"
-                    name="children"
-                    id="children"
-                    required
-                    min="0"
-                    value={formData.children}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                    placeholder="Enter number of children"
-                  />
-                </div>
-
-                {/* Education */}
-                <div>
-                  <label htmlFor="education" className="block text-xs font-medium text-gray-700">
-                    Education *
-                  </label>
-                  <select
-                    name="education"
-                    id="education"
-                    required
-                    value={formData.education}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                  >
-                    <option value="">Select education level</option>
-                    <option value="high_school">High School</option>
-                    <option value="bachelors">Bachelor's Degree</option>
-                    <option value="masters">Master's Degree</option>
-                    <option value="phd">PhD</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                {/* Address */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="address" className="block text-xs font-medium text-gray-700">
-                    Address *
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    id="address"
-                    required
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                    placeholder="Enter your street address"
-                  />
-                </div>
-
-                {/* City */}
-                <div>
-                  <label htmlFor="city" className="block text-xs font-medium text-gray-700">
-                    City *
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    id="city"
-                    required
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                    placeholder="Enter your city"
-                  />
-                </div>
-
-                {/* State */}
-                <div>
-                  <label htmlFor="state" className="block text-xs font-medium text-gray-700">
-                    State/Province *
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    id="state"
-                    required
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                    placeholder="Enter your state or province"
-                  />
-                </div>
-
-                {/* Country */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="country" className="block text-xs font-medium text-gray-700">
-                    Country *
-                  </label>
-                  <select
-                    name="country"
-                    id="country"
-                    required
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50"
-                  >
-                    <option value="">Select your country</option>
-                    <option value="india">India</option>
-                    <option value="usa">United States</option>
-                    <option value="uk">United Kingdom</option>
-                    <option value="canada">Canada</option>
-                    <option value="australia">Australia</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <button
-                  type="submit"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Basic Information */}
+              <div className="md:col-span-2">
+                <Label htmlFor="username">Username *</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  minLength={3}
+                  maxLength={30}
+                  value={formData.username}
+                  onChange={handleInputChange}
                   disabled={loading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                  placeholder="Choose a username"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="full_name">Full Name *</Label>
+                <Input
+                  id="full_name"
+                  name="full_name"
+                  type="text"
+                  required
+                  value={formData.full_name}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter your full name"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter your email"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Create a password (min. 6 characters)"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="confirm_password">Confirm Password *</Label>
+                <Input
+                  id="confirm_password"
+                  name="confirm_password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={formData.confirm_password}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Confirm your password"
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Additional Information */}
+              <div>
+                <Label htmlFor="age">Age *</Label>
+                <Input
+                  id="age"
+                  name="age"
+                  type="number"
+                  min="18"
+                  required
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter your age"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gender">Gender *</Label>
+                <Select
+                  id="gender"
+                  name="gender"
+                  required
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  disabled={loading}
                 >
-                  {loading ? (
-                    <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processing...
-                    </span>
-                  ) : (
-                    'Submit Registration'
-                  )}
-                </button>
+                  <option value="">Select gender</option>
+                  <option value={Gender.MALE}>Male</option>
+                  <option value={Gender.FEMALE}>Female</option>
+                </Select>
               </div>
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                  <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                    Sign in here
-                  </Link>
-                </p>
+              <div>
+                <Label htmlFor="marital_status">Marital Status *</Label>
+                <Select
+                  id="marital_status"
+                  name="marital_status"
+                  required
+                  value={formData.marital_status}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                >
+                  <option value="">Select status</option>
+                  <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
+                  <option value={MaritalStatus.WIDOW}>Widow</option>
+                </Select>
               </div>
 
-              <p className="mt-4 text-xs text-gray-500 text-center">
-                * Required fields
+              <div>
+                <Label htmlFor="education">Education *</Label>
+                <Select
+                  id="education"
+                  name="education"
+                  required
+                  value={formData.education}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                >
+                  <option value="">Select education</option>
+                  <option value={Education.NONE}>None</option>
+                  <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
+                  <option value={Education.HIGH_SCHOOL}>High School</option>
+                  <option value={Education.BACHELORS}>Bachelor's Degree</option>
+                  <option value={Education.MASTERS}>Master's Degree</option>
+                  <option value={Education.PHD}>PhD</option>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="children_count">Number of Children</Label>
+                <Input
+                  id="children_count"
+                  name="children_count"
+                  type="number"
+                  min="0"
+                  value={formData.children_count}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter number of children"
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Location Information */}
+              <div className="md:col-span-2">
+                <Label htmlFor="location.address">Address *</Label>
+                <Input
+                  id="location.address"
+                  name="location.address"
+                  type="text"
+                  required
+                  value={formData.location.address}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter your address"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="location.city">City *</Label>
+                <Input
+                  id="location.city"
+                  name="location.city"
+                  type="text"
+                  required
+                  value={formData.location.city}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter your city"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="location.country">Country *</Label>
+                <Input
+                  id="location.country"
+                  name="location.country"
+                  type="text"
+                  required
+                  value={formData.location.country}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  placeholder="Enter your country"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <Button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                disabled={loading}
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </Button>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+                  Sign in here
+                </Link>
               </p>
-            </form>
-          </div>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center">
+              * Required fields
+            </p>
+          </form>
         </div>
       </div>
     </div>

@@ -1,33 +1,35 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, RegisterData, LoginData, AuthResponse } from '@/services/api';
+import { api, User, Gender, MaritalStatus, Education } from '@/services/api';
 
-interface User {
-  id: string;
+interface RegisterData {
   username: string;
-  name: string;
+  full_name: string;
   email: string;
-  role: string;
-  phone: string;
+  password: string;
   age: number;
-  maritalStatus: 'widow' | 'divorced';
-  children: number;
-  education: 'high_school' | 'bachelors' | 'masters' | 'phd' | 'other';
-  address: string;
-  city: string;
-  state: string;
-  country: string;
+  gender: Gender;
+  marital_status: MaritalStatus;
+  education: Education;
+  location: {
+    address: string;
+    city: string;
+    country: string;
+  };
+  children_count: number;
 }
 
-export interface AuthContextType {
+interface LoginData {
+  username_or_email: string;
+  password: string;
+}
+
+interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
+  register: (data: RegisterData) => Promise<void>;
   login: (data: LoginData) => Promise<void>;
-  register: (data: FormData) => Promise<void>;
   logout: () => void;
 }
 
@@ -35,85 +37,55 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      checkAuth();
-    } else {
-      setLoading(false);
-    }
+    checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
-      const userData = await api.getCurrentUser();
-      setUser(userData);
-      setToken(localStorage.getItem('token'));
-      setIsAuthenticated(true);
+      const token = localStorage.getItem('token');
+      if (token) {
+        const userData = await api.getCurrentUser();
+        setUser(userData);
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('token');
-      setUser(null);
-      setToken(null);
-      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (data: LoginData) => {
+  const register = async (data: RegisterData) => {
     try {
-      setError(null);
-      const response = await api.login(data);
-      setToken(response.token);
-      setUser(response.user);
-      localStorage.setItem('token', response.token);
-      setIsAuthenticated(true);
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
+      await api.register(data);
+      // Don't store token or set user since email needs to be verified first
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
     }
   };
 
-  const register = async (data: FormData) => {
+  const login = async (data: LoginData) => {
     try {
-      setError(null);
-      const response = await api.register(data);
-      setToken(response.token);
-      setUser(response.user);
+      const response = await api.login(data);
       localStorage.setItem('token', response.token);
-      setIsAuthenticated(true);
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
+      setUser(response.user);
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
     }
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
     localStorage.removeItem('token');
-    setIsAuthenticated(false);
-  };
-
-  const value = {
-    user,
-    token,
-    loading,
-    error,
-    isAuthenticated,
-    login,
-    register,
-    logout,
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

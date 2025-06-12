@@ -1,65 +1,94 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Backend API URL - configured via environment variables
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-interface RegisterData {
+// Match backend enums
+export enum Gender {
+  MALE = "male",
+  FEMALE = "female"
+}
+
+export enum MaritalStatus {
+  DIVORCEE = "divorcee",
+  WIDOW = "widow"
+}
+
+export enum Education {
+  NONE = "none",
+  PRIMARY_SCHOOL = "primary school",
+  HIGH_SCHOOL = "high school",
+  BACHELORS = "bachelor's",
+  MASTERS = "master's",
+  PHD = "phd"
+}
+
+export interface RegisterData {
   username: string;
-  name: string;
+  full_name: string;
   email: string;
   password: string;
-  phone: string;
   age: number;
-  maritalStatus: 'widow' | 'divorced';
-  children: number;
-  education: 'high_school' | 'bachelors' | 'masters' | 'phd' | 'other';
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  profilePicture?: File;
+  gender: Gender;
+  marital_status: MaritalStatus;
+  education: Education;
+  location: {
+    address: string;
+    city: string;
+    country: string;
+  };
+  children_count: number;
+  profile_photo: string; // Always a string, empty string if no photo
 }
 
 interface LoginData {
-  email: string;
+  username_or_email: string;
   password: string;
 }
 
-interface AuthResponse {
-  message: string;
-  token: string;
-  user: {
-    id: string;
-    username: string;
-    name: string;
-    email: string;
-    role: string;
-    phone: string;
-    age: number;
-    maritalStatus: 'widow' | 'divorced';
-    children: number;
-    education: 'high_school' | 'bachelors' | 'masters' | 'phd' | 'other';
+export interface User {
+  _id: string;
+  username: string;
+  full_name: string;
+  email: string;
+  age: number;
+  gender: Gender;
+  marital_status: MaritalStatus;
+  education: Education;
+  location: {
     address: string;
     city: string;
-    state: string;
     country: string;
   };
+  children_count: number;
+  profile_photo?: string;
+  is_verified: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface AuthResponse {
+  token: string;
+  user: User;
 }
 
 export interface UpdateProfileData {
-  name?: string;
-  email?: string;
   username?: string;
-  phone?: string;
+  full_name?: string;
+  email?: string;
   age?: number;
-  maritalStatus?: 'divorced' | 'widowed' | '';
-  children?: number;
-  education?: 'high-school' | 'bachelors' | 'masters' | 'phd' | 'other' | '';
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  profilePicture?: string;
+  gender?: Gender;
+  marital_status?: MaritalStatus;
+  education?: Education;
+  location?: {
+    address: string;
+    city: string;
+    country: string;
+  };
+  children_count?: number;
+  profile_photo?: string; // Only string type - base64 encoded image or empty string
 }
 
+// Helper function to get full image URL
 export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '/images/no-profile-pic.svg';
   if (path.startsWith('data:')) return path; // Return base64 image directly
@@ -67,40 +96,72 @@ export const getImageUrl = (path: string | null | undefined): string => {
   return `${BACKEND_URL}${path}`;
 };
 
+const getToken = (): string => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+  return token;
+};
+
 export const api = {
-  async register(data: FormData): Promise<AuthResponse> {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      body: data // Send as FormData to handle file upload
-    });
+  async register(data: RegisterData): Promise<AuthResponse> {
+    try {
+      console.log('Attempting registration with data:', { ...data, password: '[REDACTED]' });
+      console.log('Registration URL:', `${API_URL}/auth/register`);
+      
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(data),
+        mode: 'cors'
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
+      console.log('Registration response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Registration failed:', errorData);
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      const responseData = await response.json();
+      console.log('Registration successful');
+      return responseData;
+    } catch (error) {
+      console.error('Registration error details:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw error;
     }
-
-    return response.json();
   },
 
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      console.log('Attempting login with email:', data.email);
+      console.log('Attempting login with:', data.username_or_email);
       
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(data),
+        mode: 'cors'
       });
 
-      const responseData = await response.json();
-      
       if (!response.ok) {
-        console.error('Login failed:', responseData);
-        throw new Error(responseData.message || 'Login failed');
+        const errorData = await response.json();
+        console.error('Login failed:', errorData);
+        throw new Error(errorData.message || 'Login failed');
       }
 
+      const responseData = await response.json();
       console.log('Login successful');
       return responseData;
     } catch (error) {
@@ -109,16 +170,64 @@ export const api = {
     }
   },
 
-  getCurrentUser: async () => {
+  async verifyOTP(email: string, otp: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email, code: otp }),
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'OTP verification failed');
+      }
+
+      await response.json();
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      throw error;
+    }
+  },
+
+  async resendOTP(email: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_URL}/auth/resend-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to resend OTP');
+      }
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      throw error;
+    }
+  },
+
+  async getCurrentUser(): Promise<User> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
 
-    const response = await fetch(`${API_URL}/auth/me`, {
+    const response = await fetch(`${API_URL}/users/profile`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
+      mode: 'cors'
     });
 
     if (!response.ok) {
@@ -126,73 +235,92 @@ export const api = {
       throw new Error(error.message || 'Failed to fetch user data');
     }
 
-    const data = await response.json();
-    return data;
+    return response.json();
   },
 
-  updateProfile: async (data: UpdateProfileData) => {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No token found');
-
+  updateProfile: async (data: UpdateProfileData): Promise<User> => {
     try {
-      const response = await fetch(`${API_URL}/auth/profile`, {
+      console.log('Starting profile update request...');
+      console.log('API URL:', `${API_URL}/users/profile`);
+      console.log('Request method:', 'PUT');
+      console.log('Data being sent:', data);
+
+      const token = getToken();
+      console.log('Using token:', token ? 'Token exists' : 'No token');
+
+      const response = await fetch(`${API_URL}/users/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(data),
+        credentials: 'include'
       });
 
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.error('Non-JSON response:', await response.text());
-        throw new Error('Server returned non-JSON response');
-      }
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Get the raw response text first
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update profile');
+        let errorMessage = 'Failed to update profile';
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      // Parse the successful response
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Error parsing success response:', e);
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('Parsed response data:', responseData);
+      return responseData;
     } catch (error) {
       console.error('Profile update error:', error);
       throw error;
     }
   },
 
-  async uploadProfilePicture(formData: FormData): Promise<{ profilePicture: string }> {
+  async uploadProfilePicture(formData: FormData): Promise<{ profile_photo: string }> {
     const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
+    if (!token) throw new Error('No token found');
 
     try {
-      const response = await fetch(`${API_URL}/auth/profile/picture`, {
+      // Check if we're removing the photo
+      const isRemoving = formData.get('profile_photo') instanceof Blob && 
+                        (formData.get('profile_photo') as Blob).size === 0;
+
+      const response = await fetch(`${API_URL}/users/profile/photo`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type header for FormData
         },
-        body: formData
+        body: formData,
+        mode: 'cors'
       });
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.error('Non-JSON response:', await response.text());
-        throw new Error('Server returned non-JSON response');
-      }
 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to upload profile picture');
       }
 
-      return response.json();
+      const data = await response.json();
+      return { profile_photo: isRemoving ? '' : data.profile_photo };
     } catch (error) {
-      console.error('Profile picture upload error:', error);
+      console.error('Upload profile picture error:', error);
       throw error;
     }
   },

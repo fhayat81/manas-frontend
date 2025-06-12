@@ -76,12 +76,12 @@ export default function Home() {
             {/* Feature cards */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="relative h-48">
-                <Image
+                {/* <Image
                   src="/images/workshop.jpg"
                   alt="Community Workshop"
                   fill
                   className="object-cover"
-                />
+                /> */}
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-900">Community Workshop</h3>
@@ -94,12 +94,12 @@ export default function Home() {
 
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="relative h-48">
-                <Image
+                {/* <Image
                   src="/images/support.jpg"
                   alt="Support Group Meeting"
                   fill
                   className="object-cover"
-                />
+                /> */}
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-900">Support Group Meeting</h3>
@@ -112,12 +112,12 @@ export default function Home() {
 
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="relative h-48">
-                <Image
+                {/* <Image
                   src="/images/training.jpg"
                   alt="Skills Training Session"
                   fill
                   className="object-cover"
-                />
+                /> */}
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-semibold text-gray-900">Skills Training Session</h3>
