@@ -18,6 +18,7 @@ interface RegisterData {
     country: string;
   };
   children_count: number;
+  profile_photo: string;
 }
 
 interface LoginData {
