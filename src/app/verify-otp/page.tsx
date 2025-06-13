@@ -108,10 +108,10 @@ function VerifyOTPContent() {
 
               <Button
                 type="submit"
-                className="w-full"
-                disabled={loading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 text-lg"
+                disabled={loading || otp.length !== 6}
               >
-                {loading ? 'Verifying...' : 'Verify Email'}
+                {loading ? 'Verifying...' : 'Confirm OTP'}
               </Button>
 
               <div className="text-center">

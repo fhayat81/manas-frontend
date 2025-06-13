@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Gender, MaritalStatus, Education, RegisterData } from '@/services/api';
+import Navbar from '@/components/Navbar';
 
 interface RegisterFormData {
   username: string;
@@ -212,8 +213,8 @@ export default function Register() {
       };
 
       await register(formattedData);
-      toast.success('Registration successful!');
-      router.push('/login');
+      toast.success('Registration successful! Please check your email for verification code.');
+      router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
       console.error('Form validation error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
@@ -228,285 +229,288 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create your account
-        </h2>
-      </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 pt-32">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Profile Photo Upload */}
-            <div className="flex flex-col items-center space-y-4">
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
-                <Image
-                  src={tempProfilePicture || '/default-avatar.png'}
-                  alt="Profile"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex space-x-4">
-                <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                  Upload Photo
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProfilePictureChange}
-                    className="hidden"
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {/* Profile Photo Upload */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
+                  <Image
+                    src={tempProfilePicture || '/images/no-profile-pic.png'}
+                    alt="Profile"
+                    fill
+                    className="object-cover"
                   />
-                </label>
-                {tempProfilePicture && (
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                </div>
+                <div className="flex space-x-4">
+                  <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                    Upload Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {tempProfilePicture && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="username">Username *</Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    minLength={3}
+                    maxLength={30}
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Choose a username"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="full_name">Full Name *</Label>
+                  <Input
+                    id="full_name"
+                    name="full_name"
+                    type="text"
+                    required
+                    value={formData.full_name}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter your full name"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter your email"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Create a password (min. 6 characters)"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="confirm_password">Confirm Password *</Label>
+                  <Input
+                    id="confirm_password"
+                    name="confirm_password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.confirm_password}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Confirm your password"
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Additional Information */}
+                <div>
+                  <Label htmlFor="age">Age *</Label>
+                  <Input
+                    id="age"
+                    name="age"
+                    type="number"
+                    min="18"
+                    required
+                    value={formData.age}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter your age"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="gender">Gender *</Label>
+                  <Select
+                    id="gender"
+                    name="gender"
+                    required
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    disabled={loading}
                   >
-                    Remove
-                  </button>
-                )}
-              </div>
-            </div>
+                    <option value="">Select gender</option>
+                    <option value={Gender.MALE}>Male</option>
+                    <option value={Gender.FEMALE}>Female</option>
+                  </Select>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Basic Information */}
-              <div className="md:col-span-2">
-                <Label htmlFor="username">Username *</Label>
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  minLength={3}
-                  maxLength={30}
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Choose a username"
-                  className="mt-1"
-                />
+                <div>
+                  <Label htmlFor="marital_status">Marital Status *</Label>
+                  <Select
+                    id="marital_status"
+                    name="marital_status"
+                    required
+                    value={formData.marital_status}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                  >
+                    <option value="">Select status</option>
+                    <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
+                    <option value={MaritalStatus.WIDOW}>Widow</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="education">Education *</Label>
+                  <Select
+                    id="education"
+                    name="education"
+                    required
+                    value={formData.education}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                  >
+                    <option value="">Select education</option>
+                    <option value={Education.NONE}>None</option>
+                    <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
+                    <option value={Education.HIGH_SCHOOL}>High School</option>
+                    <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
+                    <option value={Education.MASTERS}>Master&apos;s Degree</option>
+                    <option value={Education.PHD}>PhD</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="children_count">Number of Children</Label>
+                  <Input
+                    id="children_count"
+                    name="children_count"
+                    type="number"
+                    min="0"
+                    value={formData.children_count}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter number of children"
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Location Information */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="location.address">Address *</Label>
+                  <Input
+                    id="location.address"
+                    name="location.address"
+                    type="text"
+                    required
+                    value={formData.location.address}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter your address"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location.city">City *</Label>
+                  <Input
+                    id="location.city"
+                    name="location.city"
+                    type="text"
+                    required
+                    value={formData.location.city}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter your city"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location.country">Country *</Label>
+                  <Input
+                    id="location.country"
+                    name="location.country"
+                    type="text"
+                    required
+                    value={formData.location.country}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    placeholder="Enter your country"
+                    className="mt-1"
+                  />
+                </div>
               </div>
 
-              <div className="md:col-span-2">
-                <Label htmlFor="full_name">Full Name *</Label>
-                <Input
-                  id="full_name"
-                  name="full_name"
-                  type="text"
-                  required
-                  value={formData.full_name}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter your full name"
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter your email"
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="password">Password *</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Create a password (min. 6 characters)"
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="confirm_password">Confirm Password *</Label>
-                <Input
-                  id="confirm_password"
-                  name="confirm_password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={formData.confirm_password}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Confirm your password"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Additional Information */}
-              <div>
-                <Label htmlFor="age">Age *</Label>
-                <Input
-                  id="age"
-                  name="age"
-                  type="number"
-                  min="18"
-                  required
-                  value={formData.age}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter your age"
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="gender">Gender *</Label>
-                <Select
-                  id="gender"
-                  name="gender"
-                  required
-                  value={formData.gender}
-                  onChange={handleInputChange}
+              <div className="mt-8">
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                   disabled={loading}
                 >
-                  <option value="">Select gender</option>
-                  <option value={Gender.MALE}>Male</option>
-                  <option value={Gender.FEMALE}>Female</option>
-                </Select>
+                  {loading ? 'Creating account...' : 'Create Account'}
+                </Button>
               </div>
 
-              <div>
-                <Label htmlFor="marital_status">Marital Status *</Label>
-                <Select
-                  id="marital_status"
-                  name="marital_status"
-                  required
-                  value={formData.marital_status}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                >
-                  <option value="">Select status</option>
-                  <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
-                  <option value={MaritalStatus.WIDOW}>Widow</option>
-                </Select>
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+                    Sign in here
+                  </Link>
+                </p>
               </div>
 
-              <div>
-                <Label htmlFor="education">Education *</Label>
-                <Select
-                  id="education"
-                  name="education"
-                  required
-                  value={formData.education}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                >
-                  <option value="">Select education</option>
-                  <option value={Education.NONE}>None</option>
-                  <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
-                  <option value={Education.HIGH_SCHOOL}>High School</option>
-                  <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
-                  <option value={Education.MASTERS}>Master&apos;s Degree</option>
-                  <option value={Education.PHD}>PhD</option>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="children_count">Number of Children</Label>
-                <Input
-                  id="children_count"
-                  name="children_count"
-                  type="number"
-                  min="0"
-                  value={formData.children_count}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter number of children"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Location Information */}
-              <div className="md:col-span-2">
-                <Label htmlFor="location.address">Address *</Label>
-                <Input
-                  id="location.address"
-                  name="location.address"
-                  type="text"
-                  required
-                  value={formData.location.address}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter your address"
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="location.city">City *</Label>
-                <Input
-                  id="location.city"
-                  name="location.city"
-                  type="text"
-                  required
-                  value={formData.location.city}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter your city"
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="location.country">Country *</Label>
-                <Input
-                  id="location.country"
-                  name="location.country"
-                  type="text"
-                  required
-                  value={formData.location.country}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="Enter your country"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <Button
-                type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                disabled={loading}
-              >
-                {loading ? 'Creating account...' : 'Create Account'}
-              </Button>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
-                  Sign in here
-                </Link>
+              <p className="text-xs text-gray-500 text-center">
+                * Required fields
               </p>
-            </div>
-
-            <p className="text-xs text-gray-500 text-center">
-              * Required fields
-            </p>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 } 
