@@ -7,113 +7,207 @@ export default function About() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-400 to-indigo-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-              About MANAS Foundation
-            </h1>
-            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Empowering widows and divorced women through compassionate support and meaningful connections
+            <h1 className="text-5xl font-extrabold text-white mb-4">About MANAS Foundation</h1>
+            <p className="text-xl text-white max-w-3xl mx-auto">
+              Dedicated to empowering widows and divorced women through compassionate support and meaningful connections
             </p>
           </div>
         </div>
       </section>
 
-      {/* Mission Section */}
+      {/* Mission & Vision Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
-            <div>
-              <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                Our Mission
-              </h2>
-              <p className="mt-4 text-lg text-gray-500">
-                At MANAS Foundation, we are dedicated to breaking social barriers and creating a supportive community where widows and divorced women can find dignity, hope, and new beginnings. Through our compassionate matchmaking services and comprehensive support programs, we empower women to rebuild their lives with confidence and purpose.
-              </p>
-              <p className="mt-4 text-lg text-gray-500">
-                We believe that every woman deserves the opportunity to create meaningful connections and build a fulfilling life, regardless of their past circumstances. Our foundation provides a safe, respectful, and supportive environment where women can explore new possibilities and forge lasting relationships.
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Mission Card */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-10 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <span className="text-5xl mb-4">🎯</span>
+              <h2 className="text-3xl font-bold text-indigo-700 mb-4">Our Mission</h2>
+              <p className="text-lg text-indigo-800">
+                To empower widows and divorced women by providing dignified pathways to remarriage and companionship, creating a supportive community that breaks social stigmas and promotes healing, hope, and new beginnings.
               </p>
             </div>
-            <div className="mt-10 lg:mt-0">
-              <div className="relative h-96 rounded-lg overflow-hidden">
-                <Image
-                  src="/images/celebration.jpg"
-                  alt="Community Celebration"
-                  fill
-                  className="object-cover"
-                />
+            {/* Vision Card */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-10 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <span className="text-5xl mb-4">🌟</span>
+              <h2 className="text-3xl font-bold text-indigo-700 mb-4">Our Vision</h2>
+              <p className="text-lg text-indigo-800">
+                A society where every woman, regardless of her past circumstances, has the opportunity to find love, companionship, and support in a judgment-free environment.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Story Section */}
+      <section className="py-16 bg-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Our Story</h2>
+            <p className="text-lg text-indigo-700">A journey of empowerment and transformation</p>
+          </div>
+          {/* Timeline */}
+          <div className="relative flex flex-col gap-8 md:gap-12 pl-12 md:pl-0">
+            {/* Vertical line for desktop */}
+            <div className="absolute left-6 md:left-1/4 h-full border-l-2 border-indigo-200"></div>
+
+            <div className="flex flex-col md:flex-row md:items-center md:gap-8">
+              <div className="flex-shrink-0 flex justify-center md:justify-end md:w-1/4 relative z-10">
+                <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white px-8 py-2 rounded-full text-xl font-bold">2019</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 mt-4 md:mt-0 md:w-3/4 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2">Foundation Established</h3>
+                <p className="text-indigo-800">MANAS Foundation was founded with a vision to empower widows and divorced women</p>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center md:gap-8">
+              <div className="flex-shrink-0 flex justify-center md:justify-end md:w-1/4 relative z-10">
+                <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white px-8 py-2 rounded-full text-xl font-bold">2020</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 mt-4 md:mt-0 md:w-3/4 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2">First Connections</h3>
+                <p className="text-indigo-800">Facilitated our first 10 successful matches and connections</p>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center md:gap-8">
+              <div className="flex-shrink-0 flex justify-center md:justify-end md:w-1/4 relative z-10">
+                <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white px-8 py-2 rounded-full text-xl font-bold">2021</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 mt-4 md:mt-0 md:w-3/4 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2">Multi-City Expansion</h3>
+                <p className="text-indigo-800">Expanded services to 15 cities across India</p>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center md:gap-8">
+              <div className="flex-shrink-0 flex justify-center md:justify-end md:w-1/4 relative z-10">
+                <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white px-8 py-2 rounded-full text-xl font-bold">2022</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 mt-4 md:mt-0 md:w-3/4 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2">Digital Platform Launch</h3>
+                <p className="text-indigo-800">Launched our secure online matchmaking platform</p>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center md:gap-8">
+              <div className="flex-shrink-0 flex justify-center md:justify-end md:w-1/4 relative z-10">
+                <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white px-8 py-2 rounded-full text-xl font-bold">2023</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 mt-4 md:mt-0 md:w-3/4 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2">100+ Connections</h3>
+                <p className="text-indigo-800">Reached milestone of 100+ successful matches</p>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center md:gap-8">
+              <div className="flex-shrink-0 flex justify-center md:justify-end md:w-1/4 relative z-10">
+                <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 text-white px-8 py-2 rounded-full text-xl font-bold">2024</span>
+              </div>
+              <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 mt-4 md:mt-0 md:w-3/4 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2">200+ Lives Empowered</h3>
+                <p className="text-indigo-800">Expanded programs to empower over 200 women</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Values Section */}
-      <section className="py-16 bg-gray-50">
+      {/* Team Section */}
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Our Core Values
-            </h2>
-            <p className="mt-4 text-lg text-gray-500">
-              The principles that guide our work and shape our community
-            </p>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Our Team</h2>
+            <p className="text-lg text-indigo-700">Dedicated professionals committed to our mission</p>
           </div>
-
-          <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="text-indigo-600 text-4xl mb-4">🤝</div>
-              <h3 className="text-xl font-semibold text-gray-900">Compassion</h3>
-              <p className="mt-2 text-gray-500">
-                We approach every individual with empathy and understanding, recognizing the unique challenges they face.
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Team Member 1 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">MS</div>
+              <h3 className="text-2xl font-bold text-indigo-900 mb-1">Dr. Meera Sharma</h3>
+              <div className="text-indigo-600 font-semibold mb-2">Founder & CEO</div>
+              <p className="text-indigo-800">Women's rights advocate with 15+ years experience in social work and women empowerment</p>
             </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="text-indigo-600 text-4xl mb-4">💪</div>
-              <h3 className="text-xl font-semibold text-gray-900">Empowerment</h3>
-              <p className="mt-2 text-gray-500">
-                We provide the tools, resources, and support needed for women to take control of their lives and futures.
-              </p>
+            {/* Team Member 2 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">RK</div>
+              <h3 className="text-2xl font-bold text-indigo-900 mb-1">Rajesh Kumar</h3>
+              <div className="text-indigo-600 font-semibold mb-2">Community Outreach Manager</div>
+              <p className="text-indigo-800">Social worker specializing in community programs and grassroots initiatives</p>
             </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="text-indigo-600 text-4xl mb-4">🤲</div>
-              <h3 className="text-xl font-semibold text-gray-900">Community</h3>
-              <p className="mt-2 text-gray-500">
-                We foster a supportive network where women can connect, share experiences, and grow together.
-              </p>
+            {/* Team Member 3 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">PP</div>
+              <h3 className="text-2xl font-bold text-indigo-900 mb-1">Priya Patel</h3>
+              <div className="text-indigo-600 font-semibold mb-2">Relationship Counselor</div>
+              <p className="text-indigo-800">Licensed counselor with expertise in grief counseling and remarriage support</p>
+            </div>
+            {/* Team Member 4 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">AS</div>
+              <h3 className="text-2xl font-bold text-indigo-900 mb-1">Anita Singh</h3>
+              <div className="text-indigo-600 font-semibold mb-2">Operations Manager</div>
+              <p className="text-indigo-800">Administrative expert ensuring smooth platform operations and user experience</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Impact Section */}
+      {/* Programs & Initiatives Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Our Impact
-            </h2>
-            <p className="mt-4 text-lg text-gray-500">
-              Making a difference in the lives of women across the country
-            </p>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Our Programs & Initiatives</h2>
           </div>
-
-          <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2">
-            <div className="bg-indigo-50 rounded-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900">Success Stories</h3>
-              <p className="mt-4 text-gray-500">
-                Over 75 successful matches have been made through our platform, leading to meaningful relationships and new beginnings. Our community has grown to include more than 200 empowered women who have found support, friendship, and hope.
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Program 1 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="text-3xl mb-4">🎓</div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Empowerment Through Skills</h3>
+              <p className="text-indigo-800 mb-4">Skills training program helping women develop employable skills</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">150 beneficiaries</span>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">6-month programs</span>
+              </div>
             </div>
-
-            <div className="bg-indigo-50 rounded-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900">Community Reach</h3>
-              <p className="mt-4 text-gray-500">
-                Our programs and services have reached women in over 50 cities across the country. Through workshops, support groups, and networking events, we&apos;ve created a nationwide community of support and empowerment.
-              </p>
+            {/* Program 2 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="text-3xl mb-4">🧩</div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Counseling and Support</h3>
+              <p className="text-indigo-800 mb-4">Ongoing psychological support and counseling services</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">200 individuals</span>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">Ongoing support</span>
+              </div>
+            </div>
+            {/* Program 3 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="text-3xl mb-4">💻</div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Digital Literacy Initiative</h3>
+              <p className="text-indigo-800 mb-4">Digital skills training for better connectivity and opportunities</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">100 participants</span>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">3-month cycles</span>
+              </div>
+            </div>
+            {/* Program 4 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="text-3xl mb-4">💞</div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Matchmaking Platform</h3>
+              <p className="text-indigo-800 mb-4">Secure online platform for meaningful connections</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">300 beneficiaries</span>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">Ongoing service</span>
+              </div>
+            </div>
+            {/* Program 5 */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div className="text-3xl mb-4">⚖️</div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Legal Aid Support</h3>
+              <p className="text-indigo-800 mb-4">Legal assistance and guidance for critical matters</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">80 women</span>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">Case-by-case</span>
+              </div>
             </div>
           </div>
         </div>
