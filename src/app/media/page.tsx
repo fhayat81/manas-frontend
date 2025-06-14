@@ -27,14 +27,14 @@ const Media = () => {
             </div>
             <div className="p-6 flex flex-col flex-grow">
               <h2 className="text-2xl font-semibold text-indigo-700 mb-2">
-                MANAS Foundation Featured in National Women's Day Coverage
+                MANAS Foundation Featured in National Women\'s Day Coverage
               </h2>
               <div className="text-gray-500 text-sm mb-4 flex items-center">
                 <span className="mr-2">🗓️ March 8, 2024</span>
                 <span className="text-indigo-600 font-medium">Times of India</span>
               </div>
               <p className="text-gray-700 mb-4 flex-grow">
-                Our work in empowering widows and divorced women was highlighted in national media coverage on International Women's Day.
+                Our work in empowering widows and divorced women was highlighted in national media coverage on International Women\'s Day.
               </p>
               <button className="mt-auto self-start bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300">
                 Read More

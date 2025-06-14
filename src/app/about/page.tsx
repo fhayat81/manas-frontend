@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 export default function About() {
   return (
     <>
@@ -122,7 +120,7 @@ export default function About() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">MS</div>
               <h3 className="text-2xl font-bold text-indigo-900 mb-1">Dr. Meera Sharma</h3>
               <div className="text-indigo-600 font-semibold mb-2">Founder & CEO</div>
-              <p className="text-indigo-800">Women's rights advocate with 15+ years experience in social work and women empowerment</p>
+              <p className="text-indigo-800">Women&apos;s rights advocate with 15+ years experience in social work and women empowerment</p>
             </div>
             {/* Team Member 2 */}
             <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">

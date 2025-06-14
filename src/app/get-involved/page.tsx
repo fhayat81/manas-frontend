@@ -69,7 +69,7 @@ export default function GetInvolved() {
                 <span className="text-3xl font-bold">15</span>
               </div>
               <div className="p-6 flex-grow">
-                <h3 className="text-xl font-bold text-indigo-800 mb-2">Women's Empowerment Workshop</h3>
+                <h3 className="text-xl font-bold text-indigo-800 mb-2">Women&apos;s Empowerment Workshop</h3>
                 <p className="text-gray-600 text-sm mb-1 flex items-center"><FaRegCalendar className="mr-2 text-indigo-600" /> June 15, 2025 • <FaRegClock className="mx-2 text-indigo-600" /> 10:00 AM - 4:00 PM</p>
                 <p className="text-gray-600 text-sm mb-3 flex items-center"><FaLocationDot className="mr-2 text-indigo-600" /> Community Center, Delhi</p>
                 <p className="text-gray-700 text-sm">

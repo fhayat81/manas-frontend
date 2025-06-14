@@ -165,21 +165,21 @@ export default function Home() {
             {/* Testimonial 1 */}
             <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
               <div className="text-4xl text-indigo-600 mb-4">❝</div>
-              <p className="text-gray-800 italic flex-grow">"MANAS Foundation helped me find not just a partner, but a new beginning. The support and understanding I received made all the difference in my journey."</p>
+              <p className="text-gray-800 italic flex-grow">&quot;MANAS Foundation helped me find not just a partner, but a new beginning. The support and understanding I received made all the difference in my journey.&quot;</p>
               <p className="mt-4 text-indigo-800 font-semibold">Priya Sharma</p>
               <p className="text-sm text-gray-600">Mumbai • Beneficiary</p>
             </div>
             {/* Testimonial 2 */}
             <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
               <div className="text-4xl text-indigo-600 mb-4">❝</div>
-              <p className="text-gray-800 italic flex-grow">"Through MANAS Foundation, I connected with someone who truly understands my situation. It\'s more than matchmaking - it\'s about rebuilding lives with dignity."</p>
+              <p className="text-gray-800 italic flex-grow">&quot;Through MANAS Foundation, I connected with someone who truly understands my situation. It&apos;s more than matchmaking - it&apos;s about rebuilding lives with dignity.&quot;</p>
               <p className="mt-4 text-indigo-800 font-semibold">Anita Verma</p>
               <p className="text-sm text-gray-600">Delhi • Beneficiary</p>
             </div>
             {/* Testimonial 3 */}
             <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
               <div className="text-4xl text-indigo-600 mb-4">❝</div>
-              <p className="text-gray-800 italic flex-grow">"Working with MANAS Foundation has been incredibly rewarding. Seeing women regain their confidence and find happiness again is truly inspiring."</p>
+              <p className="text-gray-800 italic flex-grow">&quot;Working with MANAS Foundation has been incredibly rewarding. Seeing women regain their confidence and find happiness again is truly inspiring.&quot;</p>
               <p className="mt-4 text-indigo-800 font-semibold">Dr. Rajesh Gupta</p>
               <p className="text-sm text-gray-600">Chennai • Volunteer</p>
             </div>
