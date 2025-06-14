@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,8 +47,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <Navbar />
-      
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

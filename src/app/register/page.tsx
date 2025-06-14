@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Gender, MaritalStatus, Education, RegisterData } from '@/services/api';
-import Navbar from '@/components/Navbar';
 
 interface RegisterFormData {
   username: string;
@@ -230,15 +229,22 @@ export default function Register() {
 
   return (
     <>
-      <Navbar />
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 pt-32">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
+              Create your account
+            </h1>
+            <p className="text-base text-gray-600">
+              Start your journey with us today.
+            </p>
+          </div>
         </div>
+      </section>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Profile Photo Upload */}

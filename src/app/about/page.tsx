@@ -1,11 +1,8 @@
-import Navbar from '@/components/Navbar';
 import Image from 'next/image';
 
 export default function About() {
   return (
     <>
-      <Navbar />
-      
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-400 to-indigo-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

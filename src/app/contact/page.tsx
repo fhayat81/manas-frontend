@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Navbar from '@/components/Navbar';
 import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
@@ -29,8 +28,6 @@ export default function Contact() {
 
   return (
     <>
-      <Navbar />
-      
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

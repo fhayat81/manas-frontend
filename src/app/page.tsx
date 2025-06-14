@@ -1,11 +1,8 @@
-import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
 export default function Home() {
   return (
     <>
-      <Navbar />
-      
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

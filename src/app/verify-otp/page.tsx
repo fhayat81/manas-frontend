@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
 import { api } from '@/services/api';
 
 function VerifyOTPContent() {
@@ -57,7 +56,6 @@ function VerifyOTPContent() {
   if (!email) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-md mx-auto">
             <div className="bg-white shadow rounded-lg p-8">
@@ -80,7 +78,6 @@ function VerifyOTPContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="bg-white shadow rounded-lg p-8">

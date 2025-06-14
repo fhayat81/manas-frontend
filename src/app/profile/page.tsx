@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -292,7 +291,6 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Navbar />
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white shadow rounded-lg p-8">
