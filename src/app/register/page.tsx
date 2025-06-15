@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import { Gender, MaritalStatus, Education, RegisterData } from '@/services/api';
 
 interface RegisterFormData {
-  username: string;
   email: string;
   password: string;
   confirm_password: string;
@@ -23,12 +22,15 @@ interface RegisterFormData {
   marital_status: string;
   education: string;
   location: {
-    address: string;
     city: string;
     country: string;
   };
   children_count: string;
   profile_photo: string | null;
+  profession: string;
+  phone_number: string;
+  interests_hobbies: string;
+  brief_personal_description: string;
 }
 
 export default function Register() {
@@ -36,7 +38,6 @@ export default function Register() {
   const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterFormData>({
-    username: '',
     email: '',
     password: '',
     confirm_password: '',
@@ -46,12 +47,15 @@ export default function Register() {
     marital_status: '',
     education: '',
     location: {
-      address: '',
       city: '',
       country: ''
     },
     children_count: '0',
-    profile_photo: null
+    profile_photo: null,
+    profession: '',
+    phone_number: '',
+    interests_hobbies: '',
+    brief_personal_description: ''
   });
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -60,7 +64,7 @@ export default function Register() {
     setMounted(true);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
     if (name.startsWith('location.')) {
@@ -174,26 +178,26 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Validate passwords match
-      if (formData.password !== formData.confirm_password) {
-        throw new Error('Passwords do not match');
-      }
-
       // Validate required fields
-      const requiredFields = ['username', 'email', 'password', 'full_name', 'age', 'gender', 'marital_status', 'education'];
+      const requiredFields = ['email', 'password', 'confirm_password', 'full_name', 'age', 'gender', 'marital_status', 'education', 'profession', 'phone_number'];
       const missingFields = requiredFields.filter(field => !formData[field as keyof RegisterFormData]);
       
       if (missingFields.length > 0) {
         throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
       }
 
+      // Validate passwords match
+      if (formData.password !== formData.confirm_password) {
+        throw new Error('Passwords do not match');
+      }
+
       // Validate location fields
-      if (!formData.location.address || !formData.location.city || !formData.location.country) {
+      if (!formData.location.city || !formData.location.country) {
         throw new Error('Please fill in all location fields');
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { confirm_password, ...registrationData } = formData;
+      const { confirm_password, ...registrationData } = formData; // Only exclude confirm_password
       
       // Format data for API
       const formattedData: RegisterData = {
@@ -204,7 +208,6 @@ export default function Register() {
         marital_status: registrationData.marital_status as MaritalStatus,
         education: registrationData.education as Education,
         location: {
-          address: registrationData.location.address,
           city: registrationData.location.city,
           country: registrationData.location.country
         },
@@ -234,22 +237,22 @@ export default function Register() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
-              Create your account
+              Join Our Community
             </h1>
             <p className="text-base text-gray-600">
-              Start your journey with us today.
+              Take the first step towards finding meaningful connections and support
             </p>
           </div>
         </div>
       </section>
 
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="min-h-screen bg-indigo-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-xl">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Profile Photo Upload */}
-              <div className="flex flex-col items-center space-y-4">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
+              <div className="flex flex-col items-center space-y-4 mb-8">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-indigo-200">
                   <Image
                     src={tempProfilePicture || '/images/no-profile-pic.png'}
                     alt="Profile"
@@ -258,7 +261,7 @@ export default function Register() {
                   />
                 </div>
                 <div className="flex space-x-4">
-                  <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                  <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
                     Upload Photo
                     <input
                       type="file"
@@ -279,225 +282,275 @@ export default function Register() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Basic Information */}
-                <div className="md:col-span-2">
-                  <Label htmlFor="username">Username *</Label>
-                  <Input
-                    id="username"
-                    name="username"
-                    type="text"
-                    required
-                    minLength={3}
-                    maxLength={30}
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Choose a username"
-                    className="mt-1"
-                  />
-                </div>
+              {/* Personal Information */}
+              <div className="w-full">
+                <h2 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Personal Information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="full_name" className="text-gray-700">Full Name *</Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      required
+                      value={formData.full_name}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your full name"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="full_name">Full Name *</Label>
-                  <Input
-                    id="full_name"
-                    name="full_name"
-                    type="text"
-                    required
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter your full name"
-                    className="mt-1"
-                  />
-                </div>
+                  <div>
+                    <Label htmlFor="age" className="text-gray-700">Age *</Label>
+                    <Input
+                      id="age"
+                      name="age"
+                      type="number"
+                      min="18"
+                      required
+                      value={formData.age}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your age"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter your email"
-                    className="mt-1"
-                  />
-                </div>
+                  <div>
+                    <Label htmlFor="gender" className="text-gray-700">Gender *</Label>
+                    <Select
+                      id="gender"
+                      name="gender"
+                      required
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select gender</option>
+                      <option value={Gender.MALE}>Male</option>
+                      <option value={Gender.FEMALE}>Female</option>
+                    </Select>
+                  </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    minLength={6}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Create a password (min. 6 characters)"
-                    className="mt-1"
-                  />
-                </div>
+                  <div>
+                    <Label htmlFor="location.city" className="text-gray-700">City *</Label>
+                    <Input
+                      id="location.city"
+                      name="location.city"
+                      type="text"
+                      required
+                      value={formData.location.city}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your city"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="confirm_password">Confirm Password *</Label>
-                  <Input
-                    id="confirm_password"
-                    name="confirm_password"
-                    type="password"
-                    required
-                    minLength={6}
-                    value={formData.confirm_password}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Confirm your password"
-                    className="mt-1"
-                  />
-                </div>
+                  <div>
+                    <Label htmlFor="location.country" className="text-gray-700">State *</Label>
+                    <Input
+                      id="location.country"
+                      name="location.country"
+                      type="text"
+                      required
+                      value={formData.location.country}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your state"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                {/* Additional Information */}
-                <div>
-                  <Label htmlFor="age">Age *</Label>
-                  <Input
-                    id="age"
-                    name="age"
-                    type="number"
-                    min="18"
-                    required
-                    value={formData.age}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter your age"
-                    className="mt-1"
-                  />
-                </div>
+                  <div>
+                    <Label htmlFor="profession" className="text-gray-700">Profession *</Label>
+                    <Input
+                      id="profession"
+                      name="profession"
+                      type="text"
+                      required
+                      value={formData.profession}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your profession"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="gender">Gender *</Label>
-                  <Select
-                    id="gender"
-                    name="gender"
-                    required
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  >
-                    <option value="">Select gender</option>
-                    <option value={Gender.MALE}>Male</option>
-                    <option value={Gender.FEMALE}>Female</option>
-                  </Select>
+                  <div>
+                    <Label htmlFor="education" className="text-gray-700">Education *</Label>
+                    <Select
+                      id="education"
+                      name="education"
+                      required
+                      value={formData.education}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select education</option>
+                      <option value={Education.NONE}>None</option>
+                      <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
+                      <option value={Education.HIGH_SCHOOL}>High School</option>
+                      <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
+                      <option value={Education.MASTERS}>Master&apos;s Degree</option>
+                      <option value={Education.PHD}>PhD</option>
+                    </Select>
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <Label htmlFor="marital_status">Marital Status *</Label>
-                  <Select
-                    id="marital_status"
-                    name="marital_status"
-                    required
-                    value={formData.marital_status}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  >
-                    <option value="">Select status</option>
-                    <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
-                    <option value={MaritalStatus.WIDOW}>Widow</option>
-                  </Select>
+              {/* Contact & Status */}
+              <div className="w-full mt-8">
+                <h2 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Contact & Status</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="email" className="text-gray-700">Email Address *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your email"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone_number" className="text-gray-700">Phone Number *</Label>
+                    <Input
+                      id="phone_number"
+                      name="phone_number"
+                      type="tel"
+                      required
+                      value={formData.phone_number}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your phone number"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="marital_status" className="text-gray-700">Marital Status *</Label>
+                    <Select
+                      id="marital_status"
+                      name="marital_status"
+                      required
+                      value={formData.marital_status}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select Status</option>
+                      <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
+                      <option value={MaritalStatus.WIDOW}>Widow</option>
+                      <option value={MaritalStatus.SINGLE}>Single</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="password" className="text-gray-700">Password *</Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Create a password (min. 6 characters)"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="confirm_password" className="text-gray-700">Confirm Password *</Label>
+                    <Input
+                      id="confirm_password"
+                      name="confirm_password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={formData.confirm_password}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Confirm your password"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <Label htmlFor="education">Education *</Label>
-                  <Select
-                    id="education"
-                    name="education"
-                    required
-                    value={formData.education}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  >
-                    <option value="">Select education</option>
-                    <option value={Education.NONE}>None</option>
-                    <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
-                    <option value={Education.HIGH_SCHOOL}>High School</option>
-                    <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
-                    <option value={Education.MASTERS}>Master&apos;s Degree</option>
-                    <option value={Education.PHD}>PhD</option>
-                  </Select>
-                </div>
+              {/* Additional Information */}
+              <div className="w-full mt-8">
+                <h2 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Additional Information</h2>
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="interests_hobbies" className="text-gray-700">Interests and Hobbies</Label>
+                    <Input
+                      id="interests_hobbies"
+                      name="interests_hobbies"
+                      type="text"
+                      value={formData.interests_hobbies}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="e.g., Reading, Gardening, Music"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="children_count">Number of Children</Label>
-                  <Input
-                    id="children_count"
-                    name="children_count"
-                    type="number"
-                    min="0"
-                    value={formData.children_count}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter number of children"
-                    className="mt-1"
-                  />
-                </div>
-
-                {/* Location Information */}
-                <div className="md:col-span-2">
-                  <Label htmlFor="location.address">Address *</Label>
-                  <Input
-                    id="location.address"
-                    name="location.address"
-                    type="text"
-                    required
-                    value={formData.location.address}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter your address"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="location.city">City *</Label>
-                  <Input
-                    id="location.city"
-                    name="location.city"
-                    type="text"
-                    required
-                    value={formData.location.city}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter your city"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="location.country">Country *</Label>
-                  <Input
-                    id="location.country"
-                    name="location.country"
-                    type="text"
-                    required
-                    value={formData.location.country}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    placeholder="Enter your country"
-                    className="mt-1"
-                  />
+                  <div>
+                    <Label htmlFor="brief_personal_description" className="text-gray-700">Brief Personal Description</Label>
+                    <textarea
+                      id="brief_personal_description"
+                      name="brief_personal_description"
+                      rows={4}
+                      value={formData.brief_personal_description}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Tell us about yourself and what you're looking for..."
+                      className="mt-1 block w-full rounded-md shadow-sm bg-white border-gray-300 text-gray-600 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="mt-8">
+                <div className="flex items-center">
+                  <input
+                    id="accept_terms"
+                    name="accept_terms"
+                    type="checkbox"
+                    required
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded bg-white"
+                  />
+                  <label htmlFor="accept_terms" className="ml-2 block text-sm text-gray-700">
+                    I accept the{' '}
+                    <Link href="/privacy-policy" className="font-medium text-indigo-600 hover:text-indigo-700">
+                      Privacy Policy
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/terms-of-service" className="font-medium text-indigo-600 hover:text-indigo-700">
+                      Terms of Service
+                    </Link>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6">
                 <Button
                   type="submit"
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   disabled={loading}
                 >
-                  {loading ? 'Creating account...' : 'Create Account'}
+                  {loading ? 'Creating Account...' : 'Create Account'}
                 </Button>
               </div>
 

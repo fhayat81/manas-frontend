@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api, User, Gender, MaritalStatus, Education } from '@/services/api';
 
 interface RegisterData {
-  username: string;
   full_name: string;
   email: string;
   password: string;
@@ -12,8 +11,11 @@ interface RegisterData {
   gender: Gender;
   marital_status: MaritalStatus;
   education: Education;
+  profession: string;
+  phone_number: string;
+  interests_hobbies?: string;
+  brief_personal_description?: string;
   location: {
-    address: string;
     city: string;
     country: string;
   };

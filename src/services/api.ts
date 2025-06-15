@@ -1,6 +1,9 @@
 // Backend API URL - configured via environment variables
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
+const BACKEND_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5000/api';
+
 
 // Match backend enums
 export enum Gender {
@@ -10,7 +13,8 @@ export enum Gender {
 
 export enum MaritalStatus {
   DIVORCEE = "divorcee",
-  WIDOW = "widow"
+  WIDOW = "widow",
+  SINGLE = "single"
 }
 
 export enum Education {
@@ -23,7 +27,6 @@ export enum Education {
 }
 
 export interface RegisterData {
-  username: string;
   full_name: string;
   email: string;
   password: string;
@@ -31,8 +34,11 @@ export interface RegisterData {
   gender: Gender;
   marital_status: MaritalStatus;
   education: Education;
+  profession: string;
+  phone_number: string;
+  interests_hobbies?: string;
+  brief_personal_description?: string;
   location: {
-    address: string;
     city: string;
     country: string;
   };
@@ -47,15 +53,17 @@ interface LoginData {
 
 export interface User {
   _id: string;
-  username: string;
   full_name: string;
   email: string;
   age: number;
   gender: Gender;
   marital_status: MaritalStatus;
   education: Education;
-  location: {
-    address: string;
+  profession?: string;
+  phone_number?: string;
+  interests_hobbies?: string;
+  brief_personal_description?: string;
+  location?: {
     city: string;
     country: string;
   };
@@ -72,15 +80,17 @@ interface AuthResponse {
 }
 
 export interface UpdateProfileData {
-  username?: string;
   full_name?: string;
   email?: string;
   age?: number;
   gender?: Gender;
   marital_status?: MaritalStatus;
   education?: Education;
+  profession?: string;
+  phone_number?: string;
+  interests_hobbies?: string;
+  brief_personal_description?: string;
   location?: {
-    address: string;
     city: string;
     country: string;
   };

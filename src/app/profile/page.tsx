@@ -18,15 +18,17 @@ export default function ProfilePage() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
   const [formData, setFormData] = useState<UpdateProfileData>({
-    username: authUser?.username || '',
     full_name: authUser?.full_name || '',
     email: authUser?.email || '',
     age: authUser?.age,
     gender: authUser?.gender,
     marital_status: authUser?.marital_status,
     education: authUser?.education,
+    profession: authUser?.profession || '',
+    phone_number: authUser?.phone_number || '',
+    interests_hobbies: authUser?.interests_hobbies || '',
+    brief_personal_description: authUser?.brief_personal_description || '',
     location: {
-      address: authUser?.location?.address || '',
       city: authUser?.location?.city || '',
       country: authUser?.location?.country || ''
     },
@@ -38,15 +40,17 @@ export default function ProfilePage() {
       router.push('/login');
     } else if (authUser) {
       setFormData({
-        username: authUser.username || '',
         full_name: authUser.full_name || '',
         email: authUser.email || '',
         age: authUser.age,
         gender: authUser.gender,
         marital_status: authUser.marital_status,
         education: authUser.education,
+        profession: authUser.profession || '',
+        phone_number: authUser.phone_number || '',
+        interests_hobbies: authUser.interests_hobbies || '',
+        brief_personal_description: authUser.brief_personal_description || '',
         location: {
-          address: authUser.location?.address || '',
           city: authUser.location?.city || '',
           country: authUser.location?.country || ''
         },
@@ -57,14 +61,14 @@ export default function ProfilePage() {
     }
   }, [authUser, authLoading, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name.startsWith('location.')) {
       const locationKey = name.split('.')[1] as keyof typeof formData.location;
       setFormData(prev => ({
         ...prev,
         location: {
-          ...(prev.location || { address: '', city: '', country: '' }),
+          ...(prev.location || { city: '', country: '' }),
           [locationKey]: value
         }
       }));
@@ -192,15 +196,15 @@ export default function ProfilePage() {
 
       // Process each field
       Object.entries(formData).forEach(([key, value]) => {
-        // Skip empty values except for profile_photo
-        if (value === '' && key !== 'profile_photo') return;
+        // Skip empty values except for profile_photo and optional text fields
+        if (value === '' && key !== 'profile_photo' && 
+            key !== 'interests_hobbies' && key !== 'brief_personal_description') return;
 
         // Handle location fields
         if (key === 'location' && typeof value === 'object') {
-          const location = value as { address: string; city: string; country: string };
-          if (location.address || location.city || location.country) {
+          const location = value as { city: string; country: string };
+          if (location.city || location.country) {
             updateData.location = {
-              address: location.address || '',
               city: location.city || '',
               country: location.country || ''
             };
@@ -230,8 +234,10 @@ export default function ProfilePage() {
         }
 
         // Handle other fields
-        if (key === 'username' || key === 'full_name' || key === 'email' || 
-            key === 'gender' || key === 'marital_status' || key === 'education') {
+        if (key === 'full_name' || key === 'email' || 
+            key === 'gender' || key === 'marital_status' || key === 'education' ||
+            key === 'profession' || key === 'phone_number' || 
+            key === 'interests_hobbies' || key === 'brief_personal_description') {
           updateData[key] = value.toString();
           hasChanges = true;
           console.log(`Added field ${key}:`, value);
@@ -266,15 +272,17 @@ export default function ProfilePage() {
   const handleCancel = () => {
     if (authUser) {
       setFormData({
-        username: authUser.username || '',
         full_name: authUser.full_name || '',
         email: authUser.email || '',
         age: authUser.age,
         gender: authUser.gender,
         marital_status: authUser.marital_status,
         education: authUser.education,
+        profession: authUser.profession || '',
+        phone_number: authUser.phone_number || '',
+        interests_hobbies: authUser.interests_hobbies || '',
+        brief_personal_description: authUser.brief_personal_description || '',
         location: {
-          address: authUser.location?.address || '',
           city: authUser.location?.city || '',
           country: authUser.location?.country || ''
         },
@@ -291,11 +299,25 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white shadow rounded-lg p-8">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
+              Your Profile
+            </h1>
+            <p className="text-base text-gray-600">
+              Manage your personal information and preferences
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="min-h-screen bg-indigo-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-xl">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-indigo-600">Profile</h1>
+              <h2 className="text-2xl font-bold text-indigo-600">Profile Information</h2>
               {!isEditing && (
                 <Button
                   onClick={() => setIsEditing(true)}
@@ -307,208 +329,258 @@ export default function ProfilePage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Profile Picture */}
-                <div className="md:col-span-2 flex flex-col items-center">
-                  <div className="relative w-32 h-32 mb-4">
-                    {(tempProfilePicture || profilePicture) ? (
-                      <Image
-                        src={tempProfilePicture || getImageUrl(profilePicture)}
-                        alt="Profile"
-                        fill
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400 text-4xl">
-                          {formData.full_name?.charAt(0) || '?'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  {isEditing && (
-                    <div className="flex gap-4">
-                      <div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleProfilePictureChange}
-                          className="hidden"
-                          id="profile-picture"
-                        />
-                        <Button
-                          type="button"
-                          className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white"
-                          onClick={() => document.getElementById('profile-picture')?.click()}
-                        >
-                          Change Photo
-                        </Button>
-                      </div>
-                      {(tempProfilePicture || profilePicture) && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={handleRemovePhoto}
-                        >
-                          Remove Photo
-                        </Button>
-                      )}
+              {/* Profile Photo Upload */}
+              <div className="flex flex-col items-center space-y-4 mb-8">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-indigo-200">
+                  {(tempProfilePicture || profilePicture) ? (
+                    <Image
+                      src={tempProfilePicture || getImageUrl(profilePicture)}
+                      alt="Profile"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-400 text-4xl">
+                        {formData.full_name?.charAt(0) || '?'}
+                      </span>
                     </div>
                   )}
                 </div>
+                {isEditing && (
+                  <div className="flex space-x-4">
+                    <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                      Change Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePictureChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {(tempProfilePicture || profilePicture) && (
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
 
-                {/* Basic Information */}
-                <div className="md:col-span-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
+              {/* Personal Information */}
+              <div className="w-full">
+                <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="full_name" className="text-gray-700">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      value={formData.full_name}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your full name"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="age" className="text-gray-700">Age</Label>
+                    <Input
+                      id="age"
+                      name="age"
+                      type="number"
+                      min="18"
+                      value={formData.age || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your age"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gender" className="text-gray-700">Gender</Label>
+                    <Select
+                      id="gender"
+                      name="gender"
+                      value={formData.gender || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select gender</option>
+                      <option value={Gender.MALE}>Male</option>
+                      <option value={Gender.FEMALE}>Female</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location.city" className="text-gray-700">City</Label>
+                    <Input
+                      id="location.city"
+                      name="location.city"
+                      type="text"
+                      value={formData.location?.city || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your city"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location.country" className="text-gray-700">State</Label>
+                    <Input
+                      id="location.country"
+                      name="location.country"
+                      type="text"
+                      value={formData.location?.country || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your state"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="profession" className="text-gray-700">Profession</Label>
+                    <Input
+                      id="profession"
+                      name="profession"
+                      type="text"
+                      value={formData.profession}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your profession"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="education" className="text-gray-700">Education</Label>
+                    <Select
+                      id="education"
+                      name="education"
+                      value={formData.education || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select education</option>
+                      <option value={Education.NONE}>None</option>
+                      <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
+                      <option value={Education.HIGH_SCHOOL}>High School</option>
+                      <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
+                      <option value={Education.MASTERS}>Master&apos;s Degree</option>
+                      <option value={Education.PHD}>PhD</option>
+                    </Select>
+                  </div>
                 </div>
+              </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="full_name">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
+              {/* Contact & Status */}
+              <div className="w-full mt-8">
+                <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Contact & Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="email" className="text-gray-700">Email Address</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your email"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone_number" className="text-gray-700">Phone Number</Label>
+                    <Input
+                      id="phone_number"
+                      name="phone_number"
+                      type="tel"
+                      value={formData.phone_number}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your phone number"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="marital_status" className="text-gray-700">Marital Status</Label>
+                    <Select
+                      id="marital_status"
+                      name="marital_status"
+                      value={formData.marital_status || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select Status</option>
+                      <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
+                      <option value={MaritalStatus.WIDOW}>Widow</option>
+                      <option value={MaritalStatus.SINGLE}>Single</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="children_count" className="text-gray-700">Number of Children</Label>
+                    <Input
+                      id="children_count"
+                      name="children_count"
+                      type="number"
+                      min="0"
+                      value={formData.children_count ?? 0}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter number of children"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
                 </div>
+              </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
-                </div>
+              {/* Additional Information */}
+              <div className="w-full mt-8">
+                <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Additional Information</h3>
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="interests_hobbies" className="text-gray-700">Interests and Hobbies</Label>
+                    <Input
+                      id="interests_hobbies"
+                      name="interests_hobbies"
+                      type="text"
+                      value={formData.interests_hobbies}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="e.g., Reading, Gardening, Music"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="age">Age</Label>
-                  <Input
-                    id="age"
-                    name="age"
-                    type="number"
-                    min="18"
-                    value={formData.age || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select
-                    id="gender"
-                    name="gender"
-                    value={formData.gender || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  >
-                    <option value="">Select gender</option>
-                    <option value={Gender.MALE}>Male</option>
-                    <option value={Gender.FEMALE}>Female</option>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="marital_status">Marital Status</Label>
-                  <Select
-                    id="marital_status"
-                    name="marital_status"
-                    value={formData.marital_status || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  >
-                    <option value="">Select status</option>
-                    <option value={MaritalStatus.DIVORCEE}>Divorcee</option>
-                    <option value={MaritalStatus.WIDOW}>Widow</option>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="education">Education</Label>
-                  <Select
-                    id="education"
-                    name="education"
-                    value={formData.education || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  >
-                    <option value="">Select education</option>
-                    <option value={Education.HIGH_SCHOOL}>High School</option>
-                    <option value={Education.BACHELORS}>Bachelor&apos;s</option>
-                    <option value={Education.MASTERS}>Master&apos;s</option>
-                    <option value={Education.PHD}>PhD</option>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="children_count">Number of Children</Label>
-                  <Input
-                    id="children_count"
-                    name="children_count"
-                    type="number"
-                    min="0"
-                    value={formData.children_count ?? 0}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
-                </div>
-
-                {/* Location Information */}
-                <div className="md:col-span-2">
-                  <Label htmlFor="location.address">Address</Label>
-                  <Input
-                    id="location.address"
-                    name="location.address"
-                    value={formData.location?.address || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="location.city">City</Label>
-                  <Input
-                    id="location.city"
-                    name="location.city"
-                    value={formData.location?.city || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="location.country">Country</Label>
-                  <Input
-                    id="location.country"
-                    name="location.country"
-                    value={formData.location?.country || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="bg-gray-50"
-                  />
+                  <div>
+                    <Label htmlFor="brief_personal_description" className="text-gray-700">Brief Personal Description</Label>
+                    <textarea
+                      id="brief_personal_description"
+                      name="brief_personal_description"
+                      rows={4}
+                      value={formData.brief_personal_description}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Tell us about yourself and what you're looking for..."
+                      className="mt-1 block w-full rounded-md shadow-sm bg-white border-gray-300 text-gray-600 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm px-2 py-1"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -516,8 +588,8 @@ export default function ProfilePage() {
                 <div className="flex justify-end space-x-4 mt-6">
                   <Button
                     type="button"
-                    variant="outline"
                     onClick={handleCancel}
+                    className="bg-red-600 hover:bg-red-700 text-white"
                   >
                     Cancel
                   </Button>
