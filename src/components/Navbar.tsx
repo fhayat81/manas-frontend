@@ -19,7 +19,7 @@ const Navbar = () => {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About Us' },
-    { href: '/profiles', label: 'View Profiles' },
+    { href: '/view-profiles', label: 'View Profiles' },
     { href: '/get-involved', label: 'Get Involved' },
     { href: '/media', label: 'Media' },
     { href: '/contact', label: 'Contact' },

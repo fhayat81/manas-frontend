@@ -303,7 +303,7 @@ export default function ProfilePage() {
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
+            <h1 className="text-4xl font-extrabold text-indigo-600 mb-4">
               Your Profile
             </h1>
             <p className="text-base text-gray-600">
@@ -580,6 +580,29 @@ export default function ProfilePage() {
                       placeholder="Tell us about yourself and what you're looking for..."
                       className="mt-1 block w-full rounded-md shadow-sm bg-white border-gray-300 text-gray-600 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm px-2 py-1"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile Status */}
+              <div className="w-full mt-8">
+                <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Profile Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Verification</label>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-1 ${
+                      authUser?.is_verified 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {authUser?.is_verified ? 'Verified' : 'Pending Verification'}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Member Since</label>
+                    <p className="mt-1 text-gray-900">
+                      {authUser?.created_at ? new Date(authUser.created_at).toLocaleDateString() : 'N/A'}
+                    </p>
                   </div>
                 </div>
               </div>

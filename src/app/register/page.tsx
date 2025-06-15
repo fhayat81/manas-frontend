@@ -59,6 +59,7 @@ export default function Register() {
   });
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -194,6 +195,11 @@ export default function Register() {
       // Validate location fields
       if (!formData.location.city || !formData.location.country) {
         throw new Error('Please fill in all location fields');
+      }
+
+      // Validate terms and conditions checkbox
+      if (!acceptTerms) {
+        throw new Error('You must accept the Privacy Policy and Terms of Service');
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -528,6 +534,8 @@ export default function Register() {
                     id="accept_terms"
                     name="accept_terms"
                     type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
                     required
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded bg-white"
                   />

@@ -98,6 +98,29 @@ export interface UpdateProfileData {
   profile_photo?: string; // Only string type - base64 encoded image or empty string
 }
 
+export interface ProfilesResponse {
+  profiles: User[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export interface ProfileFilters {
+  location?: string;
+  ageRange?: string;
+  profession?: string;
+  search?: string;
+  gender?: Gender;
+  marital_status?: MaritalStatus;
+  education?: Education;
+  limit?: number;
+  page?: number;
+}
+
 // Helper function to get full image URL
 export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '/images/no-profile-pic.svg';
@@ -246,6 +269,68 @@ export const api = {
     }
 
     return response.json();
+  },
+
+  async getAllProfiles(filters: ProfileFilters = {}): Promise<ProfilesResponse> {
+    try {
+      const token = getToken();
+      
+      // Build query string from filters
+      const queryParams = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const url = `${API_URL}/users/profiles${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch profiles');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Get all profiles error:', error);
+      throw error;
+    }
+  },
+
+  async getProfileById(id: string): Promise<User> {
+    try {
+      const token = getToken();
+      
+      const response = await fetch(`${API_URL}/users/profile/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch profile');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Get profile by ID error:', error);
+      throw error;
+    }
   },
 
   updateProfile: async (data: UpdateProfileData): Promise<User> => {
