@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { api, User, Gender, MaritalStatus, Education, ProfileFilters, ProfilesResponse, getImageUrl } from '@/services/api';
+import { api, User, ProfileFilters, ProfilesResponse, getImageUrl } from '@/services/api';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -23,16 +23,7 @@ export default function ViewProfilesPage() {
   });
   const [loadingProfiles, setLoadingProfiles] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-    if (user) {
-      fetchProfiles();
-    }
-  }, [user, loading, router]);
-
-  const fetchProfiles = async (currentFilters?: ProfileFilters) => {
+  const fetchProfiles = useCallback(async (currentFilters?: ProfileFilters) => {
     setLoadingProfiles(true);
     try {
       const activeFilters = currentFilters || filters;
@@ -45,7 +36,16 @@ export default function ViewProfilesPage() {
     } finally {
       setLoadingProfiles(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+    if (user) {
+      fetchProfiles();
+    }
+  }, [user, loading, router, fetchProfiles]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -80,10 +80,6 @@ export default function ViewProfilesPage() {
     if (pagination?.hasPrevPage) {
       fetchProfiles({ ...filters, page: (pagination.currentPage || 1) - 1 });
     }
-  };
-
-  const handleBackToProfiles = () => {
-    router.push('/view-profiles');
   };
 
   const handleViewProfile = (profileId: string) => {
@@ -255,7 +251,7 @@ export default function ViewProfilesPage() {
                       </p>
                     )}
                     {profile.brief_personal_description && (
-                      <p className="text-sm italic">"{profile.brief_personal_description}"</p>
+                      <p className="text-sm italic">&quot;{profile.brief_personal_description}&quot;</p>
                     )}
                     <div className="flex justify-between items-center mt-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">

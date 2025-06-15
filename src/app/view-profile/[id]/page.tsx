@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api, User, getImageUrl } from '@/services/api';
@@ -17,18 +17,7 @@ export default function ViewProfilePage() {
   const [profile, setProfile] = useState<User | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  useEffect(() => {
-    if (!loading && !currentUser) {
-      router.push('/login');
-      return;
-    }
-    
-    if (profileId) {
-      fetchProfile();
-    }
-  }, [currentUser, loading, router, profileId]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
     try {
       const profileData = await api.getProfileById(profileId);
@@ -42,7 +31,18 @@ export default function ViewProfilePage() {
     } finally {
       setLoadingProfile(false);
     }
-  };
+  }, [profileId, router]);
+
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push('/login');
+      return;
+    }
+    
+    if (profileId) {
+      fetchProfile();
+    }
+  }, [currentUser, loading, router, profileId, fetchProfile]);
 
   const handleExpressInterest = () => {
     toast.success(`Interest expressed in ${profile?.full_name}'s profile! Our team will contact you within 48 hours.`);
@@ -213,7 +213,7 @@ export default function ViewProfilePage() {
                     <label className="block text-sm font-medium text-gray-700">Brief Personal Description</label>
                     <div className="mt-1 bg-gray-50 rounded-lg p-4">
                       <p className="text-gray-900 italic">
-                        "{profile.brief_personal_description}"
+                        &quot;{profile.brief_personal_description}&quot;
                       </p>
                     </div>
                   </div>
