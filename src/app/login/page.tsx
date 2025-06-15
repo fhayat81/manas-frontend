@@ -48,11 +48,11 @@ export default function LoginPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
+      <section className="relative pt-32 pb-8 bg-gradient-to-b from-indigo-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-3xl tracking-tight font-extrabold text-gray-900 sm:text-4xl md:text-5xl">
-              Welcome Back
+            <h1 className="text-3xl tracking-tight font-extrabold text-indigo-600 sm:text-4xl md:text-5xl">
+              Welcome to Manas Foundation
             </h1>
             <p className="mt-3 max-w-md mx-auto text-sm text-gray-500 sm:text-base md:mt-5 md:max-w-3xl">
               Sign in to your account

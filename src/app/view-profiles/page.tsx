@@ -87,11 +87,21 @@ export default function ViewProfilesPage() {
   };
 
   const handleViewProfile = (profileId: string) => {
+    if (!user) {
+      toast.error('Please log in to view profiles.');
+      router.push('/login');
+      return;
+    }
     toast.loading('Loading profile...', { id: 'loading-profile' });
     router.push(`/view-profile/${profileId}`);
   };
 
   const handleCardClick = (profileId: string) => {
+    if (!user) {
+      toast.error('Please log in to view profiles.');
+      router.push('/login');
+      return;
+    }
     toast.loading('Loading profile...', { id: 'loading-profile' });
     router.push(`/view-profile/${profileId}`);
   };

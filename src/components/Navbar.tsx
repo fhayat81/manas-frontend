@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,7 +20,17 @@ const Navbar = () => {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About Us' },
-    { href: '/view-profiles', label: 'View Profiles' },
+    { 
+      href: '/view-profiles',
+      label: 'View Profiles',
+      onClick: (e: React.MouseEvent) => {
+        if (!user) {
+          e.preventDefault(); // Prevent navigation
+          toast.error('Please log in to view profiles.');
+          router.push('/login');
+        }
+      }
+    },
     { href: '/get-involved', label: 'Get Involved' },
     { href: '/media', label: 'Media' },
     { href: '/contact', label: 'Contact' },
@@ -47,17 +58,32 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  pathname === link.href
-                    ? 'text-indigo-600 bg-indigo-50'
-                    : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
-                }`}
-              >
-                {link.label}
-              </Link>
+              link.href ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={link.onClick}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname === link.href
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <button
+                  key={link.label}
+                  onClick={link.onClick}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname === link.href // This case won't apply to buttons without href
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              )
             ))}
             <button className="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
               Donate
@@ -117,17 +143,32 @@ const Navbar = () => {
       <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                pathname === link.href
-                  ? 'text-indigo-600 bg-indigo-50'
-                  : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
-              }`}
-            >
-              {link.label}
-            </Link>
+            link.href ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={link.onClick}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === link.href
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <button
+                key={link.label}
+                onClick={link.onClick}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === link.href // This case won't apply to buttons without href
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                }`}
+              >
+                {link.label}
+              </button>
+            )
           ))}
           <button className="w-full mt-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
             Donate

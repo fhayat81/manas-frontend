@@ -242,7 +242,7 @@ export default function Register() {
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-indigo-50 to-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
+            <h1 className="text-4xl font-extrabold text-indigo-600 mb-4">
               Join Our Community
             </h1>
             <p className="text-base text-gray-600">
