@@ -60,7 +60,7 @@ export default function ImpactDetailPage({ params }: PageProps) {
             Ready to Get Involved?
           </h2>
           <p className="text-lg text-indigo-700 mb-8">
-            Join our community and be part of the positive change we're creating together.
+            Join our community and be part of the positive change we&apos;re creating together.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
