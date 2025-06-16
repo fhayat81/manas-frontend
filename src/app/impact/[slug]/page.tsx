@@ -3,15 +3,18 @@ import { impactCardsData } from '../../../data/cardsData';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default function ImpactDetailPage({ params }: PageProps) {
+export default async function ImpactDetailPage({ params }: PageProps) {
+  // Await the params in Next.js 15
+  const { slug } = await params;
+  
   // Find the card based on the slug
   const card = impactCardsData.find(card => 
-    card.link === `/impact/${params.slug}`
+    card.link === `/impact/${slug}`
   );
 
   if (!card) {
