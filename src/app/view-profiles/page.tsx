@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api, User, ProfileFilters, ProfilesResponse, getImageUrl } from '@/services/api';
@@ -9,11 +9,32 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { extractUniqueValues, filterProfiles } from '@/utils/fuzzySearch';
+import { SearchableSelect } from '@/components/SearchableSelect';
+import { SmartLocationSelect } from '@/components/SmartLocationSelect';
+
+// Debounce hook for search
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function ViewProfilesPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profiles, setProfiles] = useState<User[]>([]);
+  const [allProfiles, setAllProfiles] = useState<User[]>([]); // Store all profiles for filtering
   const [pagination, setPagination] = useState<ProfilesResponse['pagination'] | null>(null);
   const [filters, setFilters] = useState<ProfileFilters>({
     location: '',
@@ -22,21 +43,64 @@ export default function ViewProfilesPage() {
     search: '',
   });
   const [loadingProfiles, setLoadingProfiles] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce
+
+  // Extract unique values for filter dropdowns
+  const uniqueStates = useMemo(() => {
+    return extractUniqueValues(allProfiles, (profile) => profile.location?.state);
+  }, [allProfiles]);
+
+  const uniqueCities = useMemo(() => {
+    return extractUniqueValues(allProfiles, (profile) => profile.location?.city);
+  }, [allProfiles]);
+
+  const uniqueProfessions = useMemo(() => {
+    return extractUniqueValues(allProfiles, (profile) => profile.profession);
+  }, [allProfiles]);
+
+  // Filter profiles based on debounced search query
+  const filteredProfiles = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) {
+      return profiles;
+    }
+    return filterProfiles(profiles, debouncedSearchQuery);
+  }, [profiles, debouncedSearchQuery]);
 
   const fetchProfiles = useCallback(async (currentFilters?: ProfileFilters) => {
     setLoadingProfiles(true);
     try {
       const activeFilters = currentFilters || filters;
+      console.log('Fetching profiles with filters:', activeFilters);
+      
       const response = await api.getAllProfiles(activeFilters);
       setProfiles(response.profiles);
       setPagination(response.pagination);
     } catch (error) {
       console.error('Failed to fetch profiles:', error);
-      toast.error('Failed to load profiles.');
+      
+      // More detailed error logging
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      
+      toast.error(`Failed to load profiles: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoadingProfiles(false);
     }
   }, [filters]);
+
+  // Fetch all profiles for filter options (without pagination)
+  const fetchAllProfilesForFilters = useCallback(async () => {
+    try {
+      const response = await api.getAllProfiles({ limit: 1000 }); // Get a large number for filter options
+      setAllProfiles(response.profiles);
+    } catch (error) {
+      console.error('Failed to fetch all profiles for filters:', error);
+      // Don't show error toast for this, as it's not critical
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -44,8 +108,9 @@ export default function ViewProfilesPage() {
     }
     if (user) {
       fetchProfiles();
+      fetchAllProfilesForFilters(); // Fetch all profiles for filter options
     }
-  }, [user, loading, router, fetchProfiles]);
+  }, [user, loading, router, fetchProfiles, fetchAllProfilesForFilters]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -54,6 +119,31 @@ export default function ViewProfilesPage() {
       [name]: value,
     }));
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('search') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      // Escape to clear search
+      if (e.key === 'Escape' && searchQuery) {
+        setSearchQuery('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [searchQuery]);
 
   const applyFilters = () => {
     fetchProfiles(filters);
@@ -67,6 +157,7 @@ export default function ViewProfilesPage() {
       search: '',
     };
     setFilters(emptyFilters);
+    setSearchQuery('');
     fetchProfiles(emptyFilters);
   };
 
@@ -123,19 +214,17 @@ export default function ViewProfilesPage() {
         <div className="bg-white shadow-lg rounded-lg p-6 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
-              <Select
+              <SmartLocationSelect
                 id="location"
                 name="location"
-                value={filters.location}
+                value={filters.location || ''}
                 onChange={handleFilterChange}
+                states={uniqueStates}
+                cities={uniqueCities}
+                placeholder="Type to search states or cities..."
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
-              >
-                <option value="">All Locations</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Pune">Pune</option>
-              </Select>
+                label="Location"
+              />
             </div>
 
             <div>
@@ -156,32 +245,41 @@ export default function ViewProfilesPage() {
             </div>
 
             <div>
-              <label htmlFor="profession" className="block text-sm font-medium text-gray-700">Profession</label>
-              <Select
+              <SearchableSelect
                 id="profession"
                 name="profession"
-                value={filters.profession}
+                value={filters.profession || ''}
                 onChange={handleFilterChange}
+                options={uniqueProfessions}
+                placeholder="Type to search professions..."
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
-              >
-                <option value="">All Professions</option>
-                <option value="Teacher">Teacher</option>
-                <option value="Software Engineer">Software Engineer</option>
-                <option value="Nurse">Nurse</option>
-              </Select>
+                label="Profession"
+              />
             </div>
 
             <div className="md:col-span-1">
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 sr-only">Search profiles...</label>
-              <Input
-                id="search"
-                name="search"
-                type="text"
-                value={filters.search}
-                onChange={handleFilterChange}
-                placeholder="Search profiles..."
-                className="mt-1 block w-full text-gray-600"
-              />
+              <div className="relative">
+                <Input
+                  id="search"
+                  name="search"
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search by name, profession, location... (Ctrl+K)"
+                  className="mt-1 block w-full text-gray-600 pr-10"
+                />
+                {searchQuery !== debouncedSearchQuery && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                  </div>
+                )}
+              </div>
+              {searchQuery && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Search across names, professions, and locations • Press Esc to clear
+                </p>
+              )}
             </div>
           </div>
           <div className="mt-6 text-right space-x-4">
@@ -200,18 +298,29 @@ export default function ViewProfilesPage() {
           </div>
         </div>
 
+        {/* Search Results Info */}
+        {debouncedSearchQuery && (
+          <div className="mb-6 text-center">
+            <p className="text-gray-600">
+              Showing {filteredProfiles.length} of {profiles.length} profiles matching &quot;{debouncedSearchQuery}&quot;
+            </p>
+          </div>
+        )}
+
         {/* Profiles Grid */}
         {loadingProfiles ? (
           <div className="text-center text-gray-600 text-lg">Loading profiles...</div>
-        ) : profiles.length === 0 ? (
-          <div className="text-center text-gray-600 text-lg">No profiles found matching your criteria.</div>
+        ) : filteredProfiles.length === 0 ? (
+          <div className="text-center text-gray-600 text-lg">
+            {debouncedSearchQuery ? 'No profiles found matching your search criteria.' : 'No profiles found matching your criteria.'}
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {profiles.map(profile => (
+              {filteredProfiles.map(profile => (
                 <div 
                   key={profile._id} 
-                  className="bg-white rounded-lg shadow-lg overflow-hidden border border-indigo-200 cursor-pointer"
+                  className="bg-white rounded-lg shadow-lg overflow-hidden border border-indigo-200 cursor-pointer hover:shadow-xl transition-shadow duration-300"
                   onClick={() => handleCardClick(profile._id)}
                 >
                   <div className="relative h-48 bg-indigo-500 flex items-center justify-center">
@@ -237,7 +346,7 @@ export default function ViewProfilesPage() {
                       <span className="font-semibold">Age:</span> {profile.age} years
                     </p>
                     <p className="text-sm">
-                      <span className="font-semibold">Location:</span> {profile.location?.city}, {profile.location?.country}
+                      <span className="font-semibold">Location:</span> {profile.location?.city}, {profile.location?.state}
                     </p>
                     <p className="text-sm">
                       <span className="font-semibold">Profession:</span> {profile.profession}
@@ -272,8 +381,8 @@ export default function ViewProfilesPage() {
               ))}
             </div>
 
-            {/* Pagination Controls */}
-            {pagination && (pagination.totalPages > 1) && (
+            {/* Pagination Controls - Only show when not searching */}
+            {!debouncedSearchQuery && pagination && (pagination.totalPages > 1) && (
               <div className="mt-12 flex justify-center items-center space-x-4">
                 <Button
                   onClick={loadPrevPage}

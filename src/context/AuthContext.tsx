@@ -17,7 +17,7 @@ interface RegisterData {
   brief_personal_description?: string;
   location: {
     city: string;
-    country: string;
+    state: string;
   };
   children_count: number;
   profile_photo: string;

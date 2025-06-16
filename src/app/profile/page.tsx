@@ -30,7 +30,7 @@ export default function ProfilePage() {
     brief_personal_description: authUser?.brief_personal_description || '',
     location: {
       city: authUser?.location?.city || '',
-      country: authUser?.location?.country || ''
+      state: authUser?.location?.state || ''
     },
     children_count: authUser?.children_count
   });
@@ -52,7 +52,7 @@ export default function ProfilePage() {
         brief_personal_description: authUser.brief_personal_description || '',
         location: {
           city: authUser.location?.city || '',
-          country: authUser.location?.country || ''
+          state: authUser.location?.state || ''
         },
         children_count: authUser.children_count
       });
@@ -68,7 +68,7 @@ export default function ProfilePage() {
       setFormData(prev => ({
         ...prev,
         location: {
-          ...(prev.location || { city: '', country: '' }),
+          ...(prev.location || { city: '', state: '' }),
           [locationKey]: value
         }
       }));
@@ -202,11 +202,11 @@ export default function ProfilePage() {
 
         // Handle location fields
         if (key === 'location' && typeof value === 'object') {
-          const location = value as { city: string; country: string };
-          if (location.city || location.country) {
+          const location = value as { city: string; state: string };
+          if (location.city || location.state) {
             updateData.location = {
               city: location.city || '',
-              country: location.country || ''
+              state: location.state || ''
             };
             hasChanges = true;
             console.log('Added location fields:', updateData.location);
@@ -284,7 +284,7 @@ export default function ProfilePage() {
         brief_personal_description: authUser.brief_personal_description || '',
         location: {
           city: authUser.location?.city || '',
-          country: authUser.location?.country || ''
+          state: authUser.location?.state || ''
         },
         children_count: authUser.children_count
       });
@@ -435,12 +435,12 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="location.country" className="text-gray-700">State</Label>
+                    <Label htmlFor="location.state" className="text-gray-700">State</Label>
                     <Input
-                      id="location.country"
-                      name="location.country"
+                      id="location.state"
+                      name="location.state"
                       type="text"
-                      value={formData.location?.country || ''}
+                      value={formData.location?.state || ''}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       placeholder="Enter your state"

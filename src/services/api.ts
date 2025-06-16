@@ -40,7 +40,7 @@ export interface RegisterData {
   brief_personal_description?: string;
   location: {
     city: string;
-    country: string;
+    state: string;
   };
   children_count: number;
   profile_photo: string; // Always a string, empty string if no photo
@@ -65,7 +65,7 @@ export interface User {
   brief_personal_description?: string;
   location?: {
     city: string;
-    country: string;
+    state: string;
   };
   children_count: number;
   profile_photo?: string;
@@ -92,7 +92,7 @@ export interface UpdateProfileData {
   brief_personal_description?: string;
   location?: {
     city: string;
-    country: string;
+    state: string;
   };
   children_count?: number;
   profile_photo?: string; // Only string type - base64 encoded image or empty string
@@ -285,6 +285,10 @@ export const api = {
 
       const url = `${API_URL}/users/profiles${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       
+      console.log('API Request URL:', url);
+      console.log('API Request filters:', filters);
+      console.log('API Request query params:', queryParams.toString());
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -295,12 +299,18 @@ export const api = {
         mode: 'cors'
       });
 
+      console.log('API Response status:', response.status);
+      console.log('API Response ok:', response.ok);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error('API Error response:', error);
         throw new Error(error.message || 'Failed to fetch profiles');
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('API Success response:', data);
+      return data;
     } catch (error) {
       console.error('Get all profiles error:', error);
       throw error;

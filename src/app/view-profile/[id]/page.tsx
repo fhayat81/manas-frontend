@@ -148,7 +148,7 @@ export default function ViewProfilePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">State</label>
-                  <p className="mt-1 text-gray-900">{profile.location?.country}</p>
+                  <p className="mt-1 text-gray-900">{profile.location?.state}</p>
                 </div>
 
                 <div>

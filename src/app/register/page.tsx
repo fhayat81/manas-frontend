@@ -23,7 +23,7 @@ interface RegisterFormData {
   education: string;
   location: {
     city: string;
-    country: string;
+    state: string;
   };
   children_count: string;
   profile_photo: string | null;
@@ -48,7 +48,7 @@ export default function Register() {
     education: '',
     location: {
       city: '',
-      country: ''
+      state: ''
     },
     children_count: '0',
     profile_photo: null,
@@ -193,7 +193,7 @@ export default function Register() {
       }
 
       // Validate location fields
-      if (!formData.location.city || !formData.location.country) {
+      if (!formData.location.city || !formData.location.state) {
         throw new Error('Please fill in all location fields');
       }
 
@@ -215,7 +215,7 @@ export default function Register() {
         education: registrationData.education as Education,
         location: {
           city: registrationData.location.city,
-          country: registrationData.location.country
+          state: registrationData.location.state
         },
         profile_photo: registrationData.profile_photo || '' // Convert null to empty string
       };
@@ -356,13 +356,13 @@ export default function Register() {
                   </div>
 
                   <div>
-                    <Label htmlFor="location.country" className="text-gray-700">State *</Label>
+                    <Label htmlFor="location.state" className="text-gray-700">State *</Label>
                     <Input
-                      id="location.country"
-                      name="location.country"
+                      id="location.state"
+                      name="location.state"
                       type="text"
                       required
-                      value={formData.location.country}
+                      value={formData.location.state}
                       onChange={handleInputChange}
                       disabled={loading}
                       placeholder="Enter your state"
