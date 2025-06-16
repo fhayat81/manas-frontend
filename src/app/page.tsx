@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { impactCardsData, achievementsData, successStoriesData } from '../data/cardsData';
+import ImpactCard from '../components/ImpactCard';
 
 export default function Home() {
   return (
@@ -45,72 +47,9 @@ export default function Home() {
           </div>
 
           <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* Impact Card 1 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="relative h-48 bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg font-bold">Image Placeholder</div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-indigo-700 mb-2">Community Workshop</h3>
-                <p className="mt-2 text-gray-600">Women participating in empowerment workshop</p>
-                <Link href="#" className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
-                  Learn More
-                </Link>
-              </div>
-            </div>
-            {/* Impact Card 2 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="relative h-48 bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg font-bold">Image Placeholder</div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-indigo-700 mb-2">Support Group Meeting</h3>
-                <p className="mt-2 text-gray-600">Safe space for sharing experiences and support</p>
-                <Link href="#" className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
-                  Learn More
-                </Link>
-              </div>
-            </div>
-            {/* Impact Card 3 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="relative h-48 bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg font-bold">Image Placeholder</div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-indigo-700 mb-2">Skills Training Session</h3>
-                <p className="mt-2 text-gray-600">Hands-on training for professional development</p>
-                <Link href="#" className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
-                  Learn More
-                </Link>
-              </div>
-            </div>
-            {/* Impact Card 4 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="relative h-48 bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg font-bold">Image Placeholder</div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-indigo-700 mb-2">Success Celebration</h3>
-                <p className="mt-2 text-gray-600">Celebrating successful matches and connections</p>
-                <Link href="#" className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
-                  Learn More
-                </Link>
-              </div>
-            </div>
-            {/* Impact Card 5 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="relative h-48 bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg font-bold">Image Placeholder</div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-indigo-700 mb-2">Volunteer Team</h3>
-                <p className="mt-2 text-gray-600">Dedicated volunteers supporting our mission</p>
-                <Link href="#" className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
-                  Learn More
-                </Link>
-              </div>
-            </div>
-            {/* Impact Card 6 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="relative h-48 bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg font-bold">Image Placeholder</div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-indigo-700 mb-2">Community Event</h3>
-                <p className="mt-2 text-gray-600">Bringing together women from different backgrounds</p>
-                <Link href="#" className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
-                  Learn More
-                </Link>
-              </div>
-            </div>
+            {impactCardsData.map((card) => (
+              <ImpactCard key={card.id} card={card} />
+            ))}
           </div>
         </div>
       </section>
@@ -122,34 +61,14 @@ export default function Home() {
             <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Our Achievements</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Achievement 1 */}
-            <div className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-5xl mb-4">👩‍❤‍👩</div>
-              <div className="text-4xl font-bold text-indigo-600">200+</div>
-              <div className="mt-2 text-lg text-gray-700">Lives Empowered</div>
-              <p className="mt-1 text-sm text-gray-600">Women supported through our various programs</p>
-            </div>
-            {/* Achievement 2 */}
-            <div className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-5xl mb-4">💖</div>
-              <div className="text-4xl font-bold text-indigo-600">75+</div>
-              <div className="mt-2 text-lg text-gray-700">Successful Matches</div>
-              <p className="mt-1 text-sm text-gray-600">Meaningful connections facilitated</p>
-            </div>
-            {/* Achievement 3 */}
-            <div className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-5xl mb-4">🏢</div>
-              <div className="text-4xl font-bold text-indigo-600">50+</div>
-              <div className="mt-2 text-lg text-gray-700">Cities Reached</div>
-              <p className="mt-1 text-sm text-gray-600">Geographic spread of our impact</p>
-            </div>
-            {/* Achievement 4 */}
-            <div className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-5xl mb-4">🗓️</div>
-              <div className="text-4xl font-bold text-indigo-600">5+</div>
-              <div className="mt-2 text-lg text-gray-700">Years of Service</div>
-              <p className="mt-1 text-sm text-gray-600">Dedicated service to the community</p>
-            </div>
+            {achievementsData.map((achievement) => (
+              <div key={achievement.id} className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <div className="text-5xl mb-4">{achievement.icon}</div>
+                <div className="text-4xl font-bold text-indigo-600">{achievement.number}</div>
+                <div className="mt-2 text-lg text-gray-700">{achievement.title}</div>
+                <p className="mt-1 text-sm text-gray-600">{achievement.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -162,27 +81,14 @@ export default function Home() {
             <p className="text-lg text-indigo-700">Hear from the women whose lives have been transformed</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-4xl text-indigo-600 mb-4">❝</div>
-              <p className="text-gray-800 italic flex-grow">&quot;MANAS Foundation helped me find not just a partner, but a new beginning. The support and understanding I received made all the difference in my journey.&quot;</p>
-              <p className="mt-4 text-indigo-800 font-semibold">Priya Sharma</p>
-              <p className="text-sm text-gray-600">Mumbai • Beneficiary</p>
-            </div>
-            {/* Testimonial 2 */}
-            <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-4xl text-indigo-600 mb-4">❝</div>
-              <p className="text-gray-800 italic flex-grow">&quot;Through MANAS Foundation, I connected with someone who truly understands my situation. It&apos;s more than matchmaking - it&apos;s about rebuilding lives with dignity.&quot;</p>
-              <p className="mt-4 text-indigo-800 font-semibold">Anita Verma</p>
-              <p className="text-sm text-gray-600">Delhi • Beneficiary</p>
-            </div>
-            {/* Testimonial 3 */}
-            <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-              <div className="text-4xl text-indigo-600 mb-4">❝</div>
-              <p className="text-gray-800 italic flex-grow">&quot;Working with MANAS Foundation has been incredibly rewarding. Seeing women regain their confidence and find happiness again is truly inspiring.&quot;</p>
-              <p className="mt-4 text-indigo-800 font-semibold">Dr. Rajesh Gupta</p>
-              <p className="text-sm text-gray-600">Chennai • Volunteer</p>
-            </div>
+            {successStoriesData.map((story) => (
+              <div key={story.id} className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <div className="text-4xl text-indigo-600 mb-4">❝</div>
+                <p className="text-gray-800 italic flex-grow">&quot;{story.quote}&quot;</p>
+                <p className="mt-4 text-indigo-800 font-semibold">{story.author}</p>
+                <p className="text-sm text-gray-600">{story.location}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
