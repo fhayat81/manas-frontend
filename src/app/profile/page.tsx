@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { api, UpdateProfileData, getImageUrl, Gender, MaritalStatus, Education } from '@/services/api';
+import { api, UpdateProfileData, getImageUrl, Gender, MaritalStatus, Education, User } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,11 @@ export default function ProfilePage() {
     },
     children_count: authUser?.children_count
   });
+  const [activeTab, setActiveTab] = useState<'myInterests' | 'receivedInterests'>('myInterests');
+  const [myInterests, setMyInterests] = useState<{ user: User; sentAt: string }[]>([]);
+  const [receivedInterests, setReceivedInterests] = useState<{ user: User; sentAt: string }[]>([]);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!authLoading && !authUser) {
@@ -58,8 +63,26 @@ export default function ProfilePage() {
       });
       setProfilePicture(authUser.profile_photo || null);
       setTempProfilePicture(null);
+      setMyInterests(authUser.expressed_interests || []);
+      setReceivedInterests(authUser.received_interests || []);
     }
   }, [authUser, authLoading, router]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    if (openDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -625,6 +648,188 @@ export default function ProfilePage() {
                 </div>
               )}
             </form>
+          </div>
+        </div>
+
+        {/* Interests Section - New Card */}
+        <div className="sm:mx-auto sm:w-full sm:max-w-xl mt-8">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <h2 className="text-2xl font-bold text-indigo-600 mb-6">Interests</h2>
+            <div className="bg-indigo-50 rounded-lg shadow-md overflow-hidden">
+              <div className="flex border-b border-indigo-200">
+                <button
+                  className={`flex-1 py-4 text-center text-lg font-semibold transition-colors duration-200 ${
+                    activeTab === 'myInterests'
+                      ? 'bg-white text-indigo-700 border-b-4 border-indigo-500'
+                      : 'text-indigo-600 hover:bg-indigo-100'
+                  }`}
+                  onClick={() => setActiveTab('myInterests')}
+                >
+                  My Interests
+                </button>
+                <button
+                  className={`flex-1 py-4 text-center text-lg font-semibold transition-colors duration-200 ${
+                    activeTab === 'receivedInterests'
+                      ? 'bg-white text-indigo-700 border-b-4 border-indigo-500'
+                      : 'text-indigo-600 hover:bg-indigo-100'
+                  }`}
+                  onClick={() => setActiveTab('receivedInterests')}
+                >
+                  Received Interests
+                </button>
+              </div>
+              <div className="p-8 bg-white">
+                {activeTab === 'myInterests' && (
+                  <div className="text-center">
+                    {myInterests.length === 0 ? (
+                      <>
+                        <p className="text-xl text-gray-700 font-medium mb-4">No interests expressed yet</p>
+                        <p className="text-gray-500 mb-6">Browse profiles and express interest to see them here.</p>
+                        <Button
+                          onClick={() => router.push('/view-profiles')}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105"
+                        >
+                          Browse Profiles
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex flex-col space-y-4">
+                        {myInterests.map((interest: { user: User; sentAt: string }) => (
+                          <div key={interest.user._id} className="w-full bg-indigo-50 rounded-lg shadow-md transform transition-transform duration-200 hover:scale-105">
+                            <div className="flex items-center justify-between p-4">
+                              <div className="flex items-center space-x-4">
+                                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-300">
+                                  {interest.user.profile_photo ? (
+                                    <Image
+                                      src={getImageUrl(interest.user.profile_photo)}
+                                      alt={interest.user.full_name}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full rounded-full bg-indigo-200 flex items-center justify-center">
+                                      <span className="text-indigo-600 text-3xl uppercase">
+                                        {interest.user.full_name?.charAt(0)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-lg font-semibold text-gray-800 truncate">
+                                  {interest.user.full_name}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  onClick={() => router.push(`/view-profile/${interest.user._id}`)}
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm flex-shrink-0"
+                                >
+                                  View Profile
+                                </Button>
+                                <button
+                                  className="ml-2 p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 focus:outline-none"
+                                  style={{ fontSize: 24, fontWeight: 'bold', minWidth: 40, minHeight: 40 }}
+                                  onClick={() => setOpenDropdown(openDropdown === interest.user._id ? null : interest.user._id)}
+                                  aria-label="Show interest details"
+                                >
+                                  &#8942;
+                                </button>
+                                {openDropdown === interest.user._id && (
+                                  <div
+                                    ref={dropdownRef}
+                                    className="absolute z-[9999] right-0 top-12 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
+                                    style={{ minWidth: 220 }}
+                                  >
+                                    <h4 className="font-bold text-indigo-700 mb-2 text-center">Interest Details</h4>
+                                    <div className="text-sm text-gray-700 mb-2 text-center">
+                                      Sent At: {interest.sentAt ? new Date(interest.sentAt).toLocaleString() : 'Unknown'}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'receivedInterests' && (
+                  <div className="text-center">
+                    {receivedInterests.length === 0 ? (
+                      <>
+                        <p className="text-xl text-gray-700 font-medium mb-4">No interests received yet</p>
+                        <p className="text-gray-500 mb-6">Other users&apos; interests in you will appear here.</p>
+                        <Button
+                          onClick={() => router.push('/view-profiles')}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105"
+                        >
+                          Browse Profiles
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex flex-col space-y-4">
+                        {receivedInterests.map((interest: { user: User; sentAt: string }) => (
+                          <div key={interest.user._id} className="w-full bg-indigo-50 rounded-lg shadow-md transform transition-transform duration-200 hover:scale-105">
+                            <div className="flex items-center justify-between p-4 relative">
+                              <div className="flex items-center space-x-4">
+                                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-300">
+                                  {interest.user.profile_photo ? (
+                                    <Image
+                                      src={getImageUrl(interest.user.profile_photo)}
+                                      alt={interest.user.full_name}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full rounded-full bg-indigo-200 flex items-center justify-center">
+                                      <span className="text-indigo-600 text-3xl uppercase">
+                                        {interest.user.full_name?.charAt(0)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-lg font-semibold text-gray-800 truncate">
+                                  {interest.user.full_name}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  onClick={() => router.push(`/view-profile/${interest.user._id}`)}
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm flex-shrink-0"
+                                >
+                                  View Profile
+                                </Button>
+                                <button
+                                  className="ml-2 p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 focus:outline-none"
+                                  style={{ fontSize: 24, fontWeight: 'bold', minWidth: 40, minHeight: 40 }}
+                                  onClick={() => setOpenDropdown(openDropdown === interest.user._id ? null : interest.user._id)}
+                                  aria-label="Show interest details"
+                                >
+                                  &#8942;
+                                </button>
+                                {openDropdown === interest.user._id && (
+                                  <div
+                                    ref={dropdownRef}
+                                    className="absolute z-[9999] right-0 top-12 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
+                                    style={{ minWidth: 220 }}
+                                  >
+                                    <h4 className="font-bold text-indigo-700 mb-2 text-center">Interest Details</h4>
+                                    <div className="text-sm text-gray-700 mb-2 text-center">
+                                      Sent At: {interest.sentAt ? new Date(interest.sentAt).toLocaleString() : 'Unknown'}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

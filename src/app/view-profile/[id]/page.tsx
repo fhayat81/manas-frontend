@@ -16,6 +16,7 @@ export default function ViewProfilePage() {
   
   const [profile, setProfile] = useState<User | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -23,8 +24,7 @@ export default function ViewProfilePage() {
       const profileData = await api.getProfileById(profileId);
       setProfile(profileData);
       toast.dismiss('loading-profile');
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
+    } catch {
       toast.dismiss('loading-profile');
       toast.error('Failed to load profile');
       router.push('/view-profiles');
@@ -44,8 +44,29 @@ export default function ViewProfilePage() {
     }
   }, [currentUser, loading, router, profileId, fetchProfile]);
 
-  const handleExpressInterest = () => {
-    toast.success(`Interest expressed in ${profile?.full_name}'s profile! Our team will contact you within 48 hours.`);
+  const hasExpressedInterest = () => {
+    return currentUser?.expressed_interests?.some((entry) => entry.user._id === profileId);
+  };
+
+  const handleExpressInterest = async () => {
+    try {
+      await api.expressInterest(profileId);
+      toast.success(`Interest expressed in ${profile?.full_name}'s profile!`);
+      // Optionally, refresh user context
+    } catch {
+      toast.error('Failed to express interest.');
+    }
+  };
+
+  const handleRemoveInterest = async () => {
+    try {
+      await api.removeInterest(profileId);
+      toast.success('Interest removed successfully!');
+      setConfirmRemove(false);
+      // Optionally, refresh user context
+    } catch {
+      toast.error('Failed to remove interest.');
+    }
   };
 
   const handleBackToProfiles = () => {
@@ -223,12 +244,35 @@ export default function ViewProfilePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200">
-              <Button
-                onClick={handleExpressInterest}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
-              >
-                Express Interest
-              </Button>
+              {hasExpressedInterest() ? (
+                <>
+                  <Button
+                    onClick={() => setConfirmRemove(true)}
+                    className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                  >
+                    Remove Interest
+                  </Button>
+                  {confirmRemove && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+                      <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+                        <h4 className="font-bold text-lg mb-4">Confirm Removal</h4>
+                        <p className="mb-4">Are you sure you want to remove your interest in <span className="font-semibold">{profile.full_name}</span>?</p>
+                        <div className="flex justify-end space-x-2">
+                          <Button onClick={() => setConfirmRemove(false)} className="bg-gray-200 text-gray-800">Cancel</Button>
+                          <Button onClick={handleRemoveInterest} className="bg-red-600 text-white">Remove</Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Button
+                  onClick={handleExpressInterest}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                >
+                  Express Interest
+                </Button>
+              )}
               <Button
                 onClick={handleBackToProfiles}
                 className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
