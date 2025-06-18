@@ -1,8 +1,8 @@
 // Backend API URL - configured via environment variables
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
-// const BACKEND_URL = 'http://localhost:5000';
-// const API_URL = 'http://localhost:5000/api';
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
+const BACKEND_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5000/api';
 
 
 // Match backend enums
@@ -72,8 +72,8 @@ export interface User {
   is_verified: boolean;
   created_at: Date;
   updated_at: Date;
-  expressed_interests?: { user: User; sentAt: string }[];
-  received_interests?: { user: User; sentAt: string }[];
+  expressed_interests?: { user: User; sentAt: string; status: 'pending' | 'accepted' | 'rejected' }[];
+  received_interests?: { user: User; sentAt: string; status: 'pending' | 'accepted' | 'rejected' }[];
 }
 
 interface AuthResponse {
@@ -371,6 +371,84 @@ export const api = {
     }
   },
 
+  async acceptInterest(targetUserId: string): Promise<{ message: string }> {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}/users/accept-interest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ targetUserId }),
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to accept interest');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Accept interest error:', error);
+      throw error;
+    }
+  },
+
+  async rejectInterest(targetUserId: string): Promise<{ message: string }> {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}/users/reject-interest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ targetUserId }),
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reject interest');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Reject interest error:', error);
+      throw error;
+    }
+  },
+
+  async removeInterest(targetUserId: string): Promise<{ message: string }> {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}/users/remove-interest`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ targetUserId }),
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove interest');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Remove interest error:', error);
+      throw error;
+    }
+  },
+
   async updateProfile(data: UpdateProfileData): Promise<User> {
     try {
       console.log('Starting profile update request...');
@@ -454,30 +532,6 @@ export const api = {
       return { profile_photo: isRemoving ? '' : data.profile_photo };
     } catch (error) {
       console.error('Upload profile picture error:', error);
-      throw error;
-    }
-  },
-
-  async removeInterest(targetUserId: string): Promise<{ message: string }> {
-    try {
-      const token = getToken();
-      const response = await fetch(`${API_URL}/users/remove-interest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ targetUserId }),
-        mode: 'cors',
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to remove interest');
-      }
-      return response.json();
-    } catch (error) {
-      console.error('Remove interest error:', error);
       throw error;
     }
   },

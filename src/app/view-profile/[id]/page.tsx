@@ -9,14 +9,14 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 
 export default function ViewProfilePage() {
-  const { user: currentUser, loading } = useAuth();
+  const { user: currentUser, loading, refreshUser } = useAuth();
   const router = useRouter();
   const params = useParams();
   const profileId = params.id as string;
   
   const [profile, setProfile] = useState<User | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [sendingAgain, setSendingAgain] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -44,10 +44,6 @@ export default function ViewProfilePage() {
     }
   }, [currentUser, loading, router, profileId, fetchProfile]);
 
-  const hasExpressedInterest = () => {
-    return currentUser?.expressed_interests?.some((entry) => entry.user._id === profileId);
-  };
-
   const handleExpressInterest = async () => {
     try {
       await api.expressInterest(profileId);
@@ -58,20 +54,36 @@ export default function ViewProfilePage() {
     }
   };
 
-  const handleRemoveInterest = async () => {
+  const handleAcceptInterest = async () => {
     try {
-      await api.removeInterest(profileId);
-      toast.success('Interest removed successfully!');
-      setConfirmRemove(false);
+      await api.acceptInterest(profileId);
+      toast.success('Interest accepted! Contact information has been shared with both users.');
       // Optionally, refresh user context
     } catch {
-      toast.error('Failed to remove interest.');
+      toast.error('Failed to accept interest.');
+    }
+  };
+
+  const handleRejectInterest = async () => {
+    try {
+      await api.rejectInterest(profileId);
+      toast.success('Interest rejected successfully.');
+      // Optionally, refresh user context
+    } catch {
+      toast.error('Failed to reject interest.');
     }
   };
 
   const handleBackToProfiles = () => {
     router.push('/view-profiles');
   };
+
+  const sentInterest = currentUser?.expressed_interests?.find(
+    (entry) => entry.user._id === profileId
+  );
+  const receivedInterest = currentUser?.received_interests?.find(
+    (entry) => entry.user._id === profileId
+  );
 
   if (loading || loadingProfile) {
     return (
@@ -244,27 +256,50 @@ export default function ViewProfilePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200">
-              {hasExpressedInterest() ? (
-                <>
+              {sentInterest ? (
+                <Button
+                  onClick={async () => {
+                    await api.removeInterest(profileId);
+                    if (typeof refreshUser === 'function') await refreshUser();
+                    toast.success('Interest removed!');
+                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                >
+                  Remove Interest
+                </Button>
+              ) : receivedInterest ? (
+                receivedInterest.status === 'pending' ? (
+                  <>
+                    <Button
+                      onClick={handleAcceptInterest}
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                    >
+                      Accept Interest
+                    </Button>
+                    <Button
+                      onClick={handleRejectInterest}
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                    >
+                      Reject Interest
+                    </Button>
+                  </>
+                ) : (
                   <Button
-                    onClick={() => setConfirmRemove(true)}
-                    className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                    onClick={async () => {
+                      setSendingAgain(true);
+                      await api.removeInterest(profileId);
+                      await new Promise(res => setTimeout(res, 200));
+                      await api.expressInterest(profileId);
+                      if (typeof refreshUser === 'function') await refreshUser();
+                      setSendingAgain(false);
+                      toast.success('Interest sent!');
+                    }}
+                    disabled={sendingAgain}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
                   >
-                    Remove Interest
+                    {sendingAgain ? 'Sending...' : 'Send Interest'}
                   </Button>
-                  {confirmRemove && (
-                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-                      <div className="bg-white rounded-lg shadow-lg p-6 w-80">
-                        <h4 className="font-bold text-lg mb-4">Confirm Removal</h4>
-                        <p className="mb-4">Are you sure you want to remove your interest in <span className="font-semibold">{profile.full_name}</span>?</p>
-                        <div className="flex justify-end space-x-2">
-                          <Button onClick={() => setConfirmRemove(false)} className="bg-gray-200 text-gray-800">Cancel</Button>
-                          <Button onClick={handleRemoveInterest} className="bg-red-600 text-white">Remove</Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
+                )
               ) : (
                 <Button
                   onClick={handleExpressInterest}

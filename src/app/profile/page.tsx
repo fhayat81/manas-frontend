@@ -12,61 +12,57 @@ import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
+  const { user: currentUser, loading, refreshUser } = useAuth();
   const router = useRouter();
-  const { user: authUser, loading: authLoading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
   const [formData, setFormData] = useState<UpdateProfileData>({
-    full_name: authUser?.full_name || '',
-    email: authUser?.email || '',
-    age: authUser?.age,
-    gender: authUser?.gender,
-    marital_status: authUser?.marital_status,
-    education: authUser?.education,
-    profession: authUser?.profession || '',
-    phone_number: authUser?.phone_number || '',
-    interests_hobbies: authUser?.interests_hobbies || '',
-    brief_personal_description: authUser?.brief_personal_description || '',
-    location: {
-      city: authUser?.location?.city || '',
-      state: authUser?.location?.state || ''
-    },
-    children_count: authUser?.children_count
+    full_name: '',
+    email: '',
+    age: 0,
+    gender: Gender.MALE,
+    marital_status: MaritalStatus.SINGLE,
+    education: Education.NONE,
+    profession: '',
+    phone_number: '',
+    interests_hobbies: '',
+    brief_personal_description: '',
+    location: { city: '', state: '' },
+    children_count: 0
   });
   const [activeTab, setActiveTab] = useState<'myInterests' | 'receivedInterests'>('myInterests');
-  const [myInterests, setMyInterests] = useState<{ user: User; sentAt: string }[]>([]);
-  const [receivedInterests, setReceivedInterests] = useState<{ user: User; sentAt: string }[]>([]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const myInterests = currentUser?.expressed_interests || [];
+  const receivedInterests = currentUser?.received_interests || [];
 
   useEffect(() => {
-    if (!authLoading && !authUser) {
+    if (!loading && !currentUser) {
       router.push('/login');
-    } else if (authUser) {
+    } else if (currentUser) {
       setFormData({
-        full_name: authUser.full_name || '',
-        email: authUser.email || '',
-        age: authUser.age,
-        gender: authUser.gender,
-        marital_status: authUser.marital_status,
-        education: authUser.education,
-        profession: authUser.profession || '',
-        phone_number: authUser.phone_number || '',
-        interests_hobbies: authUser.interests_hobbies || '',
-        brief_personal_description: authUser.brief_personal_description || '',
+        full_name: currentUser.full_name || '',
+        email: currentUser.email || '',
+        age: currentUser.age,
+        gender: currentUser.gender,
+        marital_status: currentUser.marital_status,
+        education: currentUser.education,
+        profession: currentUser.profession || '',
+        phone_number: currentUser.phone_number || '',
+        interests_hobbies: currentUser.interests_hobbies || '',
+        brief_personal_description: currentUser.brief_personal_description || '',
         location: {
-          city: authUser.location?.city || '',
-          state: authUser.location?.state || ''
+          city: currentUser.location?.city || '',
+          state: currentUser.location?.state || ''
         },
-        children_count: authUser.children_count
+        children_count: currentUser.children_count
       });
-      setProfilePicture(authUser.profile_photo || null);
+      setProfilePicture(currentUser.profile_photo || null);
       setTempProfilePicture(null);
-      setMyInterests(authUser.expressed_interests || []);
-      setReceivedInterests(authUser.received_interests || []);
     }
-  }, [authUser, authLoading, router]);
+  }, [currentUser, loading, router]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -83,6 +79,12 @@ export default function ProfilePage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [openDropdown]);
+
+  // Always refresh user data when the profile page is first shown
+  useEffect(() => {
+    if (refreshUser) refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -192,9 +194,8 @@ export default function ProfilePage() {
         ...prev,
         profile_photo: compressedBase64
       }));
-    } catch (error) {
-      console.error('Error compressing image:', error);
-      toast.error('Failed to process image');
+    } catch {
+      toast.error('Something went wrong');
     }
   };
 
@@ -286,37 +287,36 @@ export default function ProfilePage() {
       setIsEditing(false);
       toast.success('Profile updated successfully');
 
-    } catch (error) {
-      console.error('Profile update error:', error);
-      toast.error('Failed to update profile');
+    } catch {
+      toast.error('Something went wrong');
     }
   };
 
   const handleCancel = () => {
-    if (authUser) {
+    if (currentUser) {
       setFormData({
-        full_name: authUser.full_name || '',
-        email: authUser.email || '',
-        age: authUser.age,
-        gender: authUser.gender,
-        marital_status: authUser.marital_status,
-        education: authUser.education,
-        profession: authUser.profession || '',
-        phone_number: authUser.phone_number || '',
-        interests_hobbies: authUser.interests_hobbies || '',
-        brief_personal_description: authUser.brief_personal_description || '',
+        full_name: currentUser.full_name || '',
+        email: currentUser.email || '',
+        age: currentUser.age,
+        gender: currentUser.gender,
+        marital_status: currentUser.marital_status,
+        education: currentUser.education,
+        profession: currentUser.profession || '',
+        phone_number: currentUser.phone_number || '',
+        interests_hobbies: currentUser.interests_hobbies || '',
+        brief_personal_description: currentUser.brief_personal_description || '',
         location: {
-          city: authUser.location?.city || '',
-          state: authUser.location?.state || ''
+          city: currentUser.location?.city || '',
+          state: currentUser.location?.state || ''
         },
-        children_count: authUser.children_count
+        children_count: currentUser.children_count
       });
     }
     setTempProfilePicture(null);
     setIsEditing(false);
   };
 
-  if (authLoading) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
@@ -614,17 +614,17 @@ export default function ProfilePage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Verification</label>
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-1 ${
-                      authUser?.is_verified 
+                      currentUser?.is_verified 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {authUser?.is_verified ? 'Verified' : 'Pending Verification'}
+                      {currentUser?.is_verified ? 'Verified' : 'Pending Verification'}
                     </span>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Member Since</label>
                     <p className="mt-1 text-gray-900">
-                      {authUser?.created_at ? new Date(authUser.created_at).toLocaleDateString() : 'N/A'}
+                      {currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -694,61 +694,75 @@ export default function ProfilePage() {
                       </>
                     ) : (
                       <div className="flex flex-col space-y-4">
-                        {myInterests.map((interest: { user: User; sentAt: string }) => (
-                          <div key={interest.user._id} className="w-full bg-indigo-50 rounded-lg shadow-md transform transition-transform duration-200 hover:scale-105">
-                            <div className="flex items-center justify-between p-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-300">
-                                  {interest.user.profile_photo ? (
-                                    <Image
-                                      src={getImageUrl(interest.user.profile_photo)}
-                                      alt={interest.user.full_name}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full rounded-full bg-indigo-200 flex items-center justify-center">
-                                      <span className="text-indigo-600 text-3xl uppercase">
-                                        {interest.user.full_name?.charAt(0)}
+                        {myInterests.map((interest: { user: User; sentAt: string; status: 'pending' | 'accepted' | 'rejected' }) => {
+                          const status = interest.status;
+                          return (
+                            <div key={interest.user._id} className="w-full bg-indigo-50 rounded-lg shadow-md transform transition-transform duration-200 hover:scale-105">
+                              <div className="flex items-center justify-between p-4">
+                                <div className="flex items-center space-x-4">
+                                  <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-300">
+                                    {interest.user.profile_photo ? (
+                                      <Image
+                                        src={getImageUrl(interest.user.profile_photo)}
+                                        alt={interest.user.full_name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full rounded-full bg-indigo-200 flex items-center justify-center">
+                                        <span className="text-indigo-600 text-3xl uppercase">
+                                          {interest.user.full_name?.charAt(0)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <p className="text-lg font-semibold text-gray-800 truncate">
+                                      {interest.user.full_name}
+                                    </p>
+                                    {status && (
+                                      <span className={`mt-1 px-2 py-1 rounded-full text-xs font-semibold w-fit
+                                        ${status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                          status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                          'bg-red-100 text-red-800'}`}
+                                      >
+                                        {status.charAt(0).toUpperCase() + status.slice(1)}
                                       </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    onClick={() => router.push(`/view-profile/${interest.user._id}`)}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm flex-shrink-0"
+                                  >
+                                    View Profile
+                                  </Button>
+                                  <button
+                                    className="ml-2 p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 focus:outline-none"
+                                    style={{ fontSize: 24, fontWeight: 'bold', minWidth: 40, minHeight: 40 }}
+                                    onClick={() => setOpenDropdown(openDropdown === interest.user._id ? null : interest.user._id)}
+                                    aria-label="Show interest details"
+                                  >
+                                    &#8942;
+                                  </button>
+                                  {openDropdown === interest.user._id && (
+                                    <div
+                                      ref={dropdownRef}
+                                      className="absolute z-[9999] right-0 top-12 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
+                                      style={{ minWidth: 220 }}
+                                    >
+                                      <h4 className="font-bold text-indigo-700 mb-2 text-center">Interest Details</h4>
+                                      <div className="text-sm text-gray-700 mb-2 text-center">
+                                        Sent At: {interest.sentAt ? new Date(interest.sentAt).toLocaleString() : 'Unknown'}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
-                                <p className="text-lg font-semibold text-gray-800 truncate">
-                                  {interest.user.full_name}
-                                </p>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Button
-                                  onClick={() => router.push(`/view-profile/${interest.user._id}`)}
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm flex-shrink-0"
-                                >
-                                  View Profile
-                                </Button>
-                                <button
-                                  className="ml-2 p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 focus:outline-none"
-                                  style={{ fontSize: 24, fontWeight: 'bold', minWidth: 40, minHeight: 40 }}
-                                  onClick={() => setOpenDropdown(openDropdown === interest.user._id ? null : interest.user._id)}
-                                  aria-label="Show interest details"
-                                >
-                                  &#8942;
-                                </button>
-                                {openDropdown === interest.user._id && (
-                                  <div
-                                    ref={dropdownRef}
-                                    className="absolute z-[9999] right-0 top-12 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4"
-                                    style={{ minWidth: 220 }}
-                                  >
-                                    <h4 className="font-bold text-indigo-700 mb-2 text-center">Interest Details</h4>
-                                    <div className="text-sm text-gray-700 mb-2 text-center">
-                                      Sent At: {interest.sentAt ? new Date(interest.sentAt).toLocaleString() : 'Unknown'}
-                                    </div>
-                                  </div>
-                                )}
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -769,7 +783,7 @@ export default function ProfilePage() {
                       </>
                     ) : (
                       <div className="flex flex-col space-y-4">
-                        {receivedInterests.map((interest: { user: User; sentAt: string }) => (
+                        {receivedInterests.map((interest: { user: User; sentAt: string; status: 'pending' | 'accepted' | 'rejected' }) => (
                           <div key={interest.user._id} className="w-full bg-indigo-50 rounded-lg shadow-md transform transition-transform duration-200 hover:scale-105">
                             <div className="flex items-center justify-between p-4 relative">
                               <div className="flex items-center space-x-4">
@@ -789,9 +803,28 @@ export default function ProfilePage() {
                                     </div>
                                   )}
                                 </div>
-                                <p className="text-lg font-semibold text-gray-800 truncate">
-                                  {interest.user.full_name}
-                                </p>
+                                <div className="flex flex-col">
+                                  <p className="text-lg font-semibold text-gray-800 truncate">
+                                    {interest.user.full_name}
+                                  </p>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    {interest.status === 'pending' && (
+                                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                                        Pending
+                                      </span>
+                                    )}
+                                    {interest.status === 'accepted' && (
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                        Accepted
+                                      </span>
+                                    )}
+                                    {interest.status === 'rejected' && (
+                                      <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                                        Rejected
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Button
@@ -817,6 +850,14 @@ export default function ProfilePage() {
                                     <h4 className="font-bold text-indigo-700 mb-2 text-center">Interest Details</h4>
                                     <div className="text-sm text-gray-700 mb-2 text-center">
                                       Sent At: {interest.sentAt ? new Date(interest.sentAt).toLocaleString() : 'Unknown'}
+                                    </div>
+                                    <div className="text-sm text-gray-700 mb-2 text-center">
+                                      Status: <span className={`font-semibold ${
+                                        interest.status === 'pending' ? 'text-yellow-600' :
+                                        interest.status === 'accepted' ? 'text-green-600' : 'text-red-600'
+                                      }`}>
+                                        {interest.status.charAt(0).toUpperCase() + interest.status.slice(1)}
+                                      </span>
                                     </div>
                                   </div>
                                 )}
