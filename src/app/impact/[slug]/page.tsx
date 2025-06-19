@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
-import { impactCardsData } from '../../../data/cardsData';
 import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { api } from '../../../services/api';
+import { ImpactCardType } from '@/types/cards';
 
 interface PageProps {
   params: Promise<{
@@ -8,18 +12,30 @@ interface PageProps {
   }>;
 }
 
-export default async function ImpactDetailPage({ params }: PageProps) {
-  // Await the params in Next.js 15
-  const { slug } = await params;
-  
-  // Find the card based on the slug
-  const card = impactCardsData.find(card => 
-    card.link === `/impact/${slug}`
-  );
+export default function ImpactDetailPage({ params }: PageProps) {
+  const [card, setCard] = useState<ImpactCardType | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!card) {
-    notFound();
-  }
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const { slug } = await params;
+      try {
+        const cards = await api.fetchImpactCards();
+        const found = cards.find((c: ImpactCardType) => c.link === `/impact/${slug}`);
+        setCard(found || null);
+      } catch (e) {
+        console.error(e);
+        setCard(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [params]);
+
+  if (loading) return <div className="text-center text-indigo-600 py-20">Loading...</div>;
+  if (!card) return notFound();
 
   return (
     <>

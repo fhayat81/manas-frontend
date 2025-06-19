@@ -1,8 +1,8 @@
 // Backend API URL - configured via environment variables
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
-// const BACKEND_URL = 'http://localhost:5000';
-// const API_URL = 'http://localhost:5000/api';
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
+const BACKEND_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5000/api';
 
 
 // Match backend enums
@@ -537,4 +537,28 @@ export const api = {
   },
 
   getImageUrl, // Export the helper function
+
+  async fetchImpactCards() {
+    const res = await fetch(`${API_URL}/users/impact-cards`);
+    if (!res.ok) throw new Error('Failed to fetch impact cards');
+    return res.json();
+  },
+
+  async fetchAchievementCards() {
+    const res = await fetch(`${API_URL}/users/achievement-cards`);
+    if (!res.ok) throw new Error('Failed to fetch achievement cards');
+    return res.json();
+  },
+
+  async fetchSuccessStories() {
+    const res = await fetch(`${API_URL}/users/success-stories`);
+    if (!res.ok) throw new Error('Failed to fetch success stories');
+    return res.json();
+  },
+
+  async fetchMediaCards() {
+    const res = await fetch(`${API_URL}/users/media-cards`);
+    if (!res.ok) throw new Error('Failed to fetch media cards');
+    return res.json();
+  },
 }; 

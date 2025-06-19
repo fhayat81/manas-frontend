@@ -1,5 +1,5 @@
 // Impact Card Interface
-export interface ImpactCard {
+export interface ImpactCardType {
   id: number;
   title: string;
   description: string;
@@ -9,7 +9,7 @@ export interface ImpactCard {
 }
 
 // Achievement Card Interface
-export interface AchievementCard {
+export interface AchievementCardType {
   id: number;
   icon: string;
   number: string;
@@ -18,7 +18,7 @@ export interface AchievementCard {
 }
 
 // Success Story Interface
-export interface SuccessStory {
+export interface SuccessStoryType {
   id: number;
   quote: string;
   author: string;
@@ -26,7 +26,7 @@ export interface SuccessStory {
 }
 
 // Media Card Interface
-export interface MediaCard {
+export interface MediaCardType {
   id: number;
   title: string;
   date: string;

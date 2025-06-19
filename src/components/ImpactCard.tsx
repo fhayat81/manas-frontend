@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ImpactCard as ImpactCardType } from '../types/cards';
+import { ImpactCardType as ImpactCardType } from '../types/cards';
 
 interface ImpactCardProps {
   card: ImpactCardType;

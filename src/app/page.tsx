@@ -1,8 +1,40 @@
+'use client';
+
 import Link from 'next/link';
-import { impactCardsData, achievementsData, successStoriesData } from '../data/cardsData';
 import ImpactCard from '../components/ImpactCard';
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
+import { ImpactCardType } from '@/types/cards';
+import { AchievementCardType } from '@/types/cards';
+import { SuccessStoryType } from '@/types/cards';
 
 export default function Home() {
+  const [impactCards, setImpactCards] = useState<ImpactCardType[]>([]);
+  const [achievements, setAchievements] = useState<AchievementCardType[]>([]);
+  const [successStories, setSuccessStories] = useState<SuccessStoryType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const [impact, achievement, stories] = await Promise.all([
+          api.fetchImpactCards(),
+          api.fetchAchievementCards(),
+          api.fetchSuccessStories()
+        ]);
+        setImpactCards(impact);
+        setAchievements(achievement);
+        setSuccessStories(stories);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <>
       {/* Hero Section */}
@@ -45,12 +77,15 @@ export default function Home() {
             <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Our Impact in Action</h2>
             <p className="text-lg text-indigo-700">Witness the transformation and empowerment happening in our community</p>
           </div>
-
-          <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {impactCardsData.map((card) => (
-              <ImpactCard key={card.id} card={card} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center text-indigo-600">Loading...</div>
+          ) : (
+            <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {impactCards.map((card) => (
+                <ImpactCard key={card.id} card={card} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -60,16 +95,20 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Our Achievements</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {achievementsData.map((achievement) => (
-              <div key={achievement.id} className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-                <div className="text-5xl mb-4">{achievement.icon}</div>
-                <div className="text-4xl font-bold text-indigo-600">{achievement.number}</div>
-                <div className="mt-2 text-lg text-gray-700">{achievement.title}</div>
-                <p className="mt-1 text-sm text-gray-600">{achievement.description}</p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center text-indigo-600">Loading...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {achievements.map((achievement) => (
+                <div key={achievement.id} className="bg-white rounded-lg shadow-lg p-6 text-center border border-indigo-100 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                  <div className="text-5xl mb-4">{achievement.icon}</div>
+                  <div className="text-4xl font-bold text-indigo-600">{achievement.number}</div>
+                  <div className="mt-2 text-lg text-gray-700">{achievement.title}</div>
+                  <p className="mt-1 text-sm text-gray-600">{achievement.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -80,16 +119,20 @@ export default function Home() {
             <h2 className="text-4xl font-extrabold text-indigo-900 mb-2">Success Stories</h2>
             <p className="text-lg text-indigo-700">Hear from the women whose lives have been transformed</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {successStoriesData.map((story) => (
-              <div key={story.id} className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-                <div className="text-4xl text-indigo-600 mb-4">❝</div>
-                <p className="text-gray-800 italic flex-grow">&quot;{story.quote}&quot;</p>
-                <p className="mt-4 text-indigo-800 font-semibold">{story.author}</p>
-                <p className="text-sm text-gray-600">{story.location}</p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center text-indigo-600">Loading...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {successStories.map((story) => (
+                <div key={story.id} className="bg-white rounded-lg shadow-lg p-8 flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                  <div className="text-4xl text-indigo-600 mb-4">❝</div>
+                  <p className="text-gray-800 italic flex-grow">&quot;{story.quote}&quot;</p>
+                  <p className="mt-4 text-indigo-800 font-semibold">{story.author}</p>
+                  <p className="text-sm text-gray-600">{story.location}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

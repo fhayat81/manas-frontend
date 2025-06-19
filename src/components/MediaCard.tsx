@@ -1,13 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { MediaCard as MediaCardType } from '../types/cards';
+import { MediaCardType } from '../types/cards';
 
-interface MediaCardProps {
-  card: MediaCardType;
-}
-
-export default function MediaCard({ card }: MediaCardProps) {
+export default function MediaCard({ card }: { card: MediaCardType }) {
   return (
     <div className="bg-indigo-50 rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-transform duration-300 hover:-translate-y-2">
       <div className="relative w-full h-48 bg-gray-200 flex items-center justify-center">
@@ -46,9 +42,14 @@ export default function MediaCard({ card }: MediaCardProps) {
         <p className="text-gray-700 mb-4 flex-grow">
           {card.description}
         </p>
-        <button className="mt-auto self-start bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300">
+        <a
+          href={card.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto self-start bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300"
+        >
           Read More
-        </button>
+        </a>
       </div>
     </div>
   );

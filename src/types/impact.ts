@@ -1,4 +1,4 @@
-export interface ImpactCard {
+export interface ImpactDetailCard {
   id: string;
   title: string;
   shortDescription: string;
