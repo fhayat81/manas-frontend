@@ -1,4 +1,4 @@
-+'use client'
+'use client'
 import Link from 'next/link';
 import { FaHeart, FaBookOpen, FaCalendarAlt } from 'react-icons/fa';
 import { FaLocationDot, FaRegCalendar, FaRegClock } from "react-icons/fa6";
