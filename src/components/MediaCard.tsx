@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { MediaCardType } from '../types/cards';
 
 export default function MediaCard({ card }: { card: MediaCardType }) {
+  const truncated = card.description.length > 120 ? card.description.slice(0, 120) + '...' : card.description;
   return (
     <div className="bg-indigo-50 rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-transform duration-300 hover:-translate-y-2">
       <div className="relative w-full h-48 bg-gray-200 flex items-center justify-center">
@@ -40,16 +42,24 @@ export default function MediaCard({ card }: { card: MediaCardType }) {
           <span className="text-indigo-600 font-medium">{card.source}</span>
         </div>
         <p className="text-gray-700 mb-4 flex-grow">
-          {card.description}
+          {truncated}
         </p>
-        <a
-          href={card.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-auto self-start bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300"
-        >
-          Read More
-        </a>
+        <div className="flex gap-2 mt-auto">
+          <Link
+            href={`/media/${card.id}`}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300"
+          >
+            Read More
+          </Link>
+          <a
+            href={card.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white border border-indigo-600 text-indigo-600 px-6 py-2 rounded-lg hover:bg-indigo-50 transition duration-300"
+          >
+            Original
+          </a>
+        </div>
       </div>
     </div>
   );

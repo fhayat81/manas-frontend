@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import MediaCard from '../../components/MediaCard';
+import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { MediaCardType } from '@/types/cards';
+import MediaCard from '@/components/MediaCard';
 
-const Media = () => {
-  const [mediaCards, setMediaCards] = useState<MediaCardType[]>([]);
-  const [loading, setLoading] = useState(true); 
+export default function MediaPage() {
+  const [media, setMedia] = useState<MediaCardType[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
         const cards = await api.fetchMediaCards();
-        setMediaCards(cards);
-      } catch {
-        setMediaCards([]);
+        setMedia(cards);
+      } catch (e) {
+        setMedia([]);
       } finally {
         setLoading(false);
       }
@@ -25,17 +25,16 @@ const Media = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 p-4">
-      <div className="container mx-auto py-8">
-        <h1 className="text-4xl font-bold text-center text-indigo-800 mb-4 pt-4">Media Coverage</h1>
-        <p className="text-xl text-center text-gray-600 mb-12">
-          See how our work is making an impact and gaining recognition.
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white pt-24 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-4xl font-extrabold text-indigo-700 mb-10 text-center">Media Coverage</h1>
         {loading ? (
-          <div className="text-center text-indigo-600">Loading...</div>
+          <div className="text-center text-indigo-600 py-20">Loading...</div>
+        ) : media.length === 0 ? (
+          <div className="text-center text-gray-500 py-20">No media coverage found.</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mediaCards.map((card) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {media.map(card => (
               <MediaCard key={card.id} card={card} />
             ))}
           </div>
@@ -43,6 +42,4 @@ const Media = () => {
       </div>
     </div>
   );
-};
-
-export default Media; 
+} 

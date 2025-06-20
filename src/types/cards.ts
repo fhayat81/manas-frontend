@@ -27,6 +27,7 @@ export interface SuccessStoryType {
 
 // Media Card Interface
 export interface MediaCardType {
+  _id?: string;
   id: number;
   title: string;
   date: string;
@@ -34,4 +35,5 @@ export interface MediaCardType {
   description: string;
   imageUrl: string;
   link: string;
+  detailedDescription: string;
 } 
