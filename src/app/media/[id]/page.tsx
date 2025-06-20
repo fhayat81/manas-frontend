@@ -61,7 +61,6 @@ export default function MediaDetailPage() {
           <div className="prose prose-lg max-w-none">
             <p><strong>Date:</strong> {card.date}</p>
             <p><strong>Source:</strong> {card.source}</p>
-            <p><strong>Link:</strong> <a href={card.link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">Read Original</a></p>
             <div className="mt-6">{card.detailedDescription || card.description}</div>
           </div>
         </div>
