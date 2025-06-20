@@ -18,7 +18,7 @@ export default function MediaDetailPage() {
         const cards = await api.fetchMediaCards();
         const found = cards.find((c: MediaCardType) => String(c._id || c.id) === id);
         setCard(found || null);
-      } catch (e) {
+      } catch {
         setCard(null);
       } finally {
         setLoading(false);

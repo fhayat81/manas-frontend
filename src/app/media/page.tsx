@@ -15,7 +15,7 @@ export default function MediaPage() {
       try {
         const cards = await api.fetchMediaCards();
         setMedia(cards);
-      } catch (e) {
+      } catch {
         setMedia([]);
       } finally {
         setLoading(false);
