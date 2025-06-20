@@ -1,8 +1,19 @@
 import Link from 'next/link';
 import { FaHeart, FaBookOpen, FaCalendarAlt } from 'react-icons/fa';
 import { FaLocationDot, FaRegCalendar, FaRegClock } from "react-icons/fa6";
+import { useEffect, useState } from 'react';
+import { api, type Event } from '@/services/api';
 
 export default function GetInvolved() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getAllEvents()
+      .then(setEvents)
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="min-h-screen bg-indigo-50">
       {/* Hero Section */}
@@ -61,75 +72,40 @@ export default function GetInvolved() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-indigo-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-extrabold text-indigo-900 text-center mb-12">Upcoming Events</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Event Card 1 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden flex hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-              <div className="bg-indigo-600 text-white p-4 flex flex-col items-center justify-center w-24 text-center">
-                <span className="text-4xl font-bold leading-none">JUN</span>
-                <span className="text-3xl font-bold">15</span>
-              </div>
-              <div className="p-6 flex-grow">
-                <h3 className="text-xl font-bold text-indigo-800 mb-2">Women&apos;s Empowerment Workshop</h3>
-                <p className="text-gray-600 text-sm mb-1 flex items-center"><FaRegCalendar className="mr-2 text-indigo-600" /> June 15, 2025 • <FaRegClock className="mx-2 text-indigo-600" /> 10:00 AM - 4:00 PM</p>
-                <p className="text-gray-600 text-sm mb-3 flex items-center"><FaLocationDot className="mr-2 text-indigo-600" /> Community Center, Delhi</p>
-                <p className="text-gray-700 text-sm">
-                  Full-day workshop focused on building confidence, self-esteem, and life skills for
-                  women ready to start new chapters in their lives.
-                </p>
-              </div>
+          {loading ? (
+            <div className="text-center text-lg text-gray-500">Loading events...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map(event => (
+                <div key={event._id} className="bg-white rounded-lg shadow-lg overflow-hidden flex hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+                  <div className="bg-indigo-600 text-white p-4 flex flex-col items-center justify-center w-24 text-center">
+                    <span className="text-4xl font-bold leading-none">{event.month}</span>
+                    <span className="text-3xl font-bold">{event.day}</span>
+                  </div>
+                  <div className="p-6 flex-grow">
+                    <h3 className="text-xl font-bold text-indigo-800 mb-2">{event.title}</h3>
+                    <p className="text-gray-600 text-sm mb-1 flex items-center"><FaRegCalendar className="mr-2 text-indigo-600" /> {new Date(event.date).toLocaleDateString()} • <FaRegClock className="mx-2 text-indigo-600" /> {event.startTime} - {event.endTime}</p>
+                    <p className="text-gray-600 text-sm mb-3 flex items-center"><FaLocationDot className="mr-2 text-indigo-600" /> {event.location}</p>
+                    <p className="text-gray-700 text-sm mb-3">{event.description}</p>
+                    <div className="flex gap-2">
+                      {event.registerLink && event.registerLink.trim() !== '' ? (
+                        <Link
+                          href={event.registerLink}
+                          className="px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Register
+                        </Link>
+                      ) : (
+                        <span className="inline-block px-4 py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-md">Coming Soon</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* Event Card 2 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden flex hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-              <div className="bg-indigo-600 text-white p-4 flex flex-col items-center justify-center w-24 text-center">
-                <span className="text-4xl font-bold leading-none">JUN</span>
-                <span className="text-3xl font-bold">22</span>
-              </div>
-              <div className="p-6 flex-grow">
-                <h3 className="text-xl font-bold text-indigo-800 mb-2">Matchmaking Meet & Greet</h3>
-                <p className="text-gray-600 text-sm mb-1 flex items-center"><FaRegCalendar className="mr-2 text-indigo-600" /> June 22, 2025 • <FaRegClock className="mx-2 text-indigo-600" /> 3:00 PM - 6:00 PM</p>
-                <p className="text-gray-600 text-sm mb-3 flex items-center"><FaLocationDot className="mr-2 text-indigo-600" /> Garden Venue, Mumbai</p>
-                <p className="text-gray-700 text-sm">
-                  Casual meetup event for community members to connect in a comfortable, supportive
-                  environment.
-                </p>
-              </div>
-            </div>
-
-            {/* Event Card 3 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden flex hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-              <div className="bg-indigo-600 text-white p-4 flex flex-col items-center justify-center w-24 text-center">
-                <span className="text-4xl font-bold leading-none">JUL</span>
-                <span className="text-3xl font-bold">05</span>
-              </div>
-              <div className="p-6 flex-grow">
-                <h3 className="text-xl font-bold text-indigo-800 mb-2">Digital Literacy Training</h3>
-                <p className="text-gray-600 text-sm mb-1 flex items-center"><FaRegCalendar className="mr-2 text-indigo-600" /> July 5, 2025 • <FaRegClock className="mx-2 text-indigo-600" /> 9:00 AM - 1:00 PM</p>
-                <p className="text-gray-600 text-sm mb-3 flex items-center"><FaLocationDot className="mr-2 text-indigo-600" /> Technology Center, Bangalore</p>
-                <p className="text-gray-700 text-sm">
-                  Hands-on training session to improve digital skills and online safety for better connectivity.
-                </p>
-              </div>
-            </div>
-
-            {/* Event Card 4 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden flex hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-              <div className="bg-indigo-600 text-white p-4 flex flex-col items-center justify-center w-24 text-center">
-                <span className="text-4xl font-bold leading-none">JUL</span>
-                <span className="text-3xl font-bold">20</span>
-              </div>
-              <div className="p-6 flex-grow">
-                <h3 className="text-xl font-bold text-indigo-800 mb-2">Annual Fundraising Gala</h3>
-                <p className="text-gray-600 text-sm mb-1 flex items-center"><FaRegCalendar className="mr-2 text-indigo-600" /> July 20, 2025 • <FaRegClock className="mx-2 text-indigo-600" /> 7:00 PM - 11:00 PM</p>
-                <p className="text-gray-600 text-sm mb-3 flex items-center"><FaLocationDot className="mr-2 text-indigo-600" /> Grand Ballroom, New Delhi</p>
-                <p className="text-gray-700 text-sm">
-                  Elegant evening celebrating our achievements and raising funds for continued support of our
-                  mission.
-                </p>
-              </div>
-            </div>
-
-          </div>
+          )}
         </div>
       </section>
     </div>

@@ -123,6 +123,19 @@ export interface ProfileFilters {
   page?: number;
 }
 
+export interface Event {
+  _id: string;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  description: string;
+  month: string;
+  day: string;
+  registerLink: string;
+}
+
 // Helper function to get full image URL
 export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '/images/no-profile-pic.svg';
@@ -570,5 +583,11 @@ export const api = {
     });
     const data = await res.json();
     return { ok: res.ok, ...data };
+  },
+
+  async getAllEvents(): Promise<Event[]> {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/admin'}/events`);
+    if (!res.ok) throw new Error('Failed to fetch events');
+    return res.json();
   },
 }; 
