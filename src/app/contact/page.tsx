@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import { api } from '@/services/api';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -11,11 +12,27 @@ export default function Contact() {
     subject: '',
     message: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log(formData);
+    setLoading(true);
+    setResult(null);
+    try {
+      const { ok, message } = await api.sendContactMessage(formData);
+      if (ok) {
+        setResult({ type: 'success', message: message || 'Message sent successfully!' });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setResult({ type: 'error', message: message || 'Failed to send message.' });
+      }
+    } catch (error) {
+      setResult({ type: 'error', message: 'Failed to send message.' });
+      console.log(error)
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -60,7 +77,7 @@ export default function Contact() {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md outline-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
+                    className="text-gray-700 mt-1 block w-full rounded-md outline-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
                   />
                 </div>
                 <div>
@@ -74,7 +91,7 @@ export default function Contact() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md outline-gray-500 border-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
+                    className="text-gray-700 mt-1 block w-full rounded-md outline-gray-500 border-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
                   />
                 </div>
                 <div>
@@ -88,7 +105,7 @@ export default function Contact() {
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md outline-gray-500 border-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
+                    className="text-gray-700 mt-1 block w-full rounded-md outline-gray-500 border-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
                   />
                 </div>
                 <div>
@@ -102,17 +119,23 @@ export default function Contact() {
                     required
                     value={formData.message}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md outline-gray-500 border-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2"
+                    className="mt-1 block w-full rounded-md outline-gray-500 border-gray-500 shadow-lg focus:border-indigo-600 focus:outline-indigo-600 px-3 py-2 text-gray-700"
                   />
                 </div>
                 <div>
                   <button
                     type="submit"
                     className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
+                    disabled={loading}
                   >
-                    Send Message
+                    {loading ? 'Sending...' : 'Send Message'}
                   </button>
                 </div>
+                {result && (
+                  <div className={`text-center text-sm mt-2 ${result.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                    {result.message}
+                  </div>
+                )}
               </form>
             </div>
 

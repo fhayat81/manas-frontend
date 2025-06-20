@@ -561,4 +561,14 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch media cards');
     return res.json();
   },
+
+  async sendContactMessage({ name, email, subject, message }: { name: string; email: string; subject: string; message: string }) {
+    const res = await fetch(`${API_URL}/users/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, subject, message }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, ...data };
+  },
 }; 
