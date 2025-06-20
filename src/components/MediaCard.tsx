@@ -51,14 +51,6 @@ export default function MediaCard({ card }: { card: MediaCardType }) {
           >
             Read More
           </Link>
-          <a
-            href={card.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white border border-indigo-600 text-indigo-600 px-6 py-2 rounded-lg hover:bg-indigo-50 transition duration-300"
-          >
-            Original
-          </a>
         </div>
       </div>
     </div>
