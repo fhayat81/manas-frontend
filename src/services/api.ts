@@ -635,7 +635,7 @@ export const api = {
   },
 
   async getAllEvents(): Promise<Event[]> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}/users/events`);
+    const res = await fetch(`${API_URL}/users/events`);
     if (!res.ok) throw new Error('Failed to fetch events');
     return res.json();
   },
