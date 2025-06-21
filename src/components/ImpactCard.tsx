@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { ImpactCardType as ImpactCardType } from '../types/cards';
 
@@ -9,16 +8,17 @@ interface ImpactCardProps {
 }
 
 export default function ImpactCard({ card }: ImpactCardProps) {
+  // Generate the impact URL using the card's ID
+  const impactUrl = `/impact/${card.id}`;
+
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
       <div className="relative h-48 bg-indigo-100">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={card.imageUrl}
           alt={card.title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          priority={card.id <= 4}
+          className="w-full h-full object-cover"
           onError={(e) => {
             // Fallback to placeholder if image fails to load
             const target = e.target as HTMLImageElement;
@@ -40,7 +40,7 @@ export default function ImpactCard({ card }: ImpactCardProps) {
       <div className="p-6">
         <h3 className="text-xl font-semibold text-indigo-700 mb-2">{card.title}</h3>
         <p className="mt-2 text-gray-600">{card.description}</p>
-        <Link href={card.link} className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
+        <Link href={impactUrl} className="mt-4 inline-block text-white bg-indigo-600 hover:bg-indigo-700 rounded-md px-4 py-2 text-sm font-medium transition">
           Learn More
         </Link>
       </div>

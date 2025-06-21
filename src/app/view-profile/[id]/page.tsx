@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api, User, getImageUrl } from '@/services/api';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
@@ -17,6 +18,8 @@ export default function ViewProfilePage() {
   const [profile, setProfile] = useState<User | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [sendingAgain, setSendingAgain] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -55,22 +58,30 @@ export default function ViewProfilePage() {
   };
 
   const handleAcceptInterest = async () => {
+    setAccepting(true);
+    toast.loading('Accepting interest...', { id: 'accept-interest' });
     try {
       await api.acceptInterest(profileId);
-      toast.success('Interest accepted! Contact information has been shared with both users.');
-      // Optionally, refresh user context
+      toast.success('Interest accepted! Contact information has been shared with both users.', { id: 'accept-interest' });
+      if (typeof refreshUser === 'function') await refreshUser();
     } catch {
-      toast.error('Failed to accept interest.');
+      toast.error('Failed to accept interest.', { id: 'accept-interest' });
+    } finally {
+      setAccepting(false);
     }
   };
 
   const handleRejectInterest = async () => {
+    setRejecting(true);
+    toast.loading('Rejecting interest...', { id: 'reject-interest' });
     try {
       await api.rejectInterest(profileId);
-      toast.success('Interest rejected successfully.');
-      // Optionally, refresh user context
+      toast.success('Interest rejected successfully.', { id: 'reject-interest' });
+      if (typeof refreshUser === 'function') await refreshUser();
     } catch {
-      toast.error('Failed to reject interest.');
+      toast.error('Failed to reject interest.', { id: 'reject-interest' });
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -163,20 +174,29 @@ export default function ViewProfilePage() {
             {/* Personal Information */}
             <div className="w-full">
               <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Age</label>
-                  <p className="mt-1 text-gray-900">{profile.age} years old</p>
+                  <Label className="text-sm font-medium text-gray-600">Date of Birth</Label>
+                  <p className="text-sm text-gray-900">{new Date(profile.date_of_birth).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Gender</Label>
+                  <p className="text-sm text-gray-900 capitalize">{profile.gender}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Gender</label>
-                  <p className="mt-1 text-gray-900 capitalize">{profile.gender}</p>
+                  <label className="block text-sm font-medium text-gray-700">Village</label>
+                  <p className="mt-1 text-gray-900">{profile.location?.village}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">City</label>
-                  <p className="mt-1 text-gray-900">{profile.location?.city}</p>
+                  <label className="block text-sm font-medium text-gray-700">Tehsil</label>
+                  <p className="mt-1 text-gray-900">{profile.location?.tehsil}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">District</label>
+                  <p className="mt-1 text-gray-900">{profile.location?.district}</p>
                 </div>
 
                 <div>
@@ -193,6 +213,27 @@ export default function ViewProfilePage() {
                   <label className="block text-sm font-medium text-gray-700">Education</label>
                   <p className="mt-1 text-gray-900 capitalize">{profile.education}</p>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Caste</label>
+                  <p className="mt-1 text-gray-900 capitalize">{profile.caste}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Religion</label>
+                  <p className="mt-1 text-gray-900 capitalize">{profile.religion}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Guardian Information */}
+            <div className="w-full mt-8">
+              <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Guardian Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Guardian Name</label>
+                  <p className="mt-1 text-gray-900">{profile.guardian?.name}</p>
+                </div>
               </div>
             </div>
 
@@ -205,10 +246,30 @@ export default function ViewProfilePage() {
                   <p className="mt-1 text-gray-900 capitalize">{profile.marital_status}</p>
                 </div>
 
+                {profile.divorce_finalized !== undefined && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Divorce Finalized</label>
+                    <p className="mt-1 text-gray-900">{profile.divorce_finalized ? 'Yes' : 'No'}</p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Number of Children</label>
                   <p className="mt-1 text-gray-900">{profile.children_count} child(ren)</p>
                 </div>
+
+                {profile.children && profile.children.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Children Details</label>
+                    <div className="mt-1 space-y-1">
+                      {profile.children.map((child, index) => (
+                        <p key={index} className="text-gray-900">
+                          Child {index + 1}: {child.gender}, Age: {child.age}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Verification Status</label>
@@ -273,14 +334,20 @@ export default function ViewProfilePage() {
                     <Button
                       onClick={handleAcceptInterest}
                       className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                      disabled={accepting}
                     >
-                      Accept Interest
+                      {accepting ? (
+                        <span className="flex items-center"><span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>Accepting...</span>
+                      ) : 'Accept Interest'}
                     </Button>
                     <Button
                       onClick={handleRejectInterest}
                       className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-md shadow-lg text-lg"
+                      disabled={rejecting}
                     >
-                      Reject Interest
+                      {rejecting ? (
+                        <span className="flex items-center"><span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>Rejecting...</span>
+                      ) : 'Reject Interest'}
                     </Button>
                   </>
                 ) : (

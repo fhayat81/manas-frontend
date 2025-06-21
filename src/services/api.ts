@@ -1,8 +1,8 @@
 // Backend API URL - configured via environment variables
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
-// const BACKEND_URL = 'http://localhost:5000';
-// const API_URL = 'http://localhost:5000/api';
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://manas-backend-new.onrender.com';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://manas-backend-new.onrender.com/api';
+const BACKEND_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5000/api';
 
 
 // Match backend enums
@@ -26,11 +26,39 @@ export enum Education {
   PHD = "phd"
 }
 
+export enum Religion {
+  HINDU = "hindu",
+  MUSLIM = "muslim",
+  CHRISTIAN = "christian",
+  SIKH = "sikh",
+  BUDDHIST = "buddhist",
+  JAIN = "jain",
+  OTHER = "other"
+}
+
+export enum Caste {
+  GENERAL = "general",
+  OBC = "obc",
+  SC = "sc",
+  ST = "st",
+  OTHER = "other"
+}
+
+export interface Child {
+  gender: 'boy' | 'girl';
+  age: number;
+}
+
+export interface Guardian {
+  name: string;
+  contact: string;
+}
+
 export interface RegisterData {
   full_name: string;
   email: string;
   password: string;
-  age: number;
+  date_of_birth: string;
   gender: Gender;
   marital_status: MaritalStatus;
   education: Education;
@@ -39,9 +67,16 @@ export interface RegisterData {
   interests_hobbies?: string;
   brief_personal_description?: string;
   location: {
-    city: string;
+    village: string;
+    tehsil: string;
+    district: string;
     state: string;
   };
+  guardian: Guardian;
+  caste: Caste;
+  religion: Religion;
+  divorce_finalized?: boolean;
+  children?: Child[];
   children_count: number;
   profile_photo: string; // Always a string, empty string if no photo
 }
@@ -55,7 +90,7 @@ export interface User {
   _id: string;
   full_name: string;
   email: string;
-  age: number;
+  date_of_birth: string;
   gender: Gender;
   marital_status: MaritalStatus;
   education: Education;
@@ -64,9 +99,16 @@ export interface User {
   interests_hobbies?: string;
   brief_personal_description?: string;
   location?: {
-    city: string;
+    village: string;
+    tehsil: string;
+    district: string;
     state: string;
   };
+  guardian?: Guardian;
+  caste?: Caste;
+  religion?: Religion;
+  divorce_finalized?: boolean;
+  children?: Child[];
   children_count: number;
   profile_photo?: string;
   is_verified: boolean;
@@ -84,7 +126,7 @@ interface AuthResponse {
 export interface UpdateProfileData {
   full_name?: string;
   email?: string;
-  age?: number;
+  date_of_birth?: string;
   gender?: Gender;
   marital_status?: MaritalStatus;
   education?: Education;
@@ -93,9 +135,16 @@ export interface UpdateProfileData {
   interests_hobbies?: string;
   brief_personal_description?: string;
   location?: {
-    city: string;
+    village: string;
+    tehsil: string;
+    district: string;
     state: string;
   };
+  guardian?: Guardian;
+  caste?: Caste;
+  religion?: Religion;
+  divorce_finalized?: boolean;
+  children?: Child[];
   children_count?: number;
   profile_photo?: string; // Only string type - base64 encoded image or empty string
 }
@@ -586,8 +635,67 @@ export const api = {
   },
 
   async getAllEvents(): Promise<Event[]> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/admin'}/events`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}/users/events`);
     if (!res.ok) throw new Error('Failed to fetch events');
     return res.json();
+  },
+
+  async submitVolunteerForm(data: {
+    name: string;
+    email: string;
+    phone: string;
+    city: string;
+    why: string;
+    areas: string[];
+    areaOther: string;
+    availability: string;
+    experience: string;
+  }): Promise<{ message: string }> {
+    console.log('API: Submitting volunteer data to backend:', data);
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const res = await fetch(`${API_URL}/volunteer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+        mode: 'cors',
+      });
+      
+      clearTimeout(timeoutId);
+      console.log('API: Response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.log('API: Error response:', errorText);
+        let errorMessage = 'Failed to submit volunteer form';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          console.log('API: Could not parse error response as JSON');
+        }
+        throw new Error(errorMessage);
+      }
+      
+      const result = await res.json();
+      console.log('API: Success response:', result);
+      return result;
+    } catch (error: unknown) {
+      console.error('API: Network error:', error);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. Please check if the backend server is running.');
+        }
+        if (error.message.includes('SSL') || error.message.includes('TLS')) {
+          throw new Error('Connection error. Please check if the backend server is running on http://localhost:5000');
+        }
+        throw new Error(error.message || 'Network error. Please try again.');
+      }
+      throw new Error('Network error. Please try again.');
+    }
   },
 }; 

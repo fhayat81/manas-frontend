@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { MediaCardType } from '../types/cards';
 
@@ -9,12 +8,11 @@ export default function MediaCard({ card }: { card: MediaCardType }) {
   return (
     <div className="bg-indigo-50 rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-transform duration-300 hover:-translate-y-2">
       <div className="relative w-full h-48 bg-gray-200 flex items-center justify-center">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={card.imageUrl}
           alt={`${card.source} Icon`}
-          width={80}
-          height={80}
-          className="object-contain"
+          className="w-full h-full object-cover"
           onError={(e) => {
             // Fallback to placeholder if image fails to load
             const target = e.target as HTMLImageElement;
@@ -46,7 +44,7 @@ export default function MediaCard({ card }: { card: MediaCardType }) {
         </p>
         <div className="flex gap-2 mt-auto">
           <Link
-            href={`/media/${card.id}`}
+            href={`/media/${card._id || card.id}`}
             className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300"
           >
             Read More

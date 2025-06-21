@@ -59,9 +59,12 @@ export default function MediaDetailPage() {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-lg max-w-none">
-            <p><strong>Date:</strong> {card.date}</p>
-            <p><strong>Source:</strong> {card.source}</p>
-            <div className="mt-6">{card.detailedDescription || card.description}</div>
+            <p className='text-black'><strong>Date:</strong> {card.date}</p>
+            <p className='text-black'><strong>Source:</strong> {card.source}</p>
+            <div 
+              className="mt-6"
+              dangerouslySetInnerHTML={{ __html: card.detailedDescription || card.description }}
+            />
           </div>
         </div>
       </section>

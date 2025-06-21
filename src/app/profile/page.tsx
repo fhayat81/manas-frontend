@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { api, UpdateProfileData, getImageUrl, Gender, MaritalStatus, Education, User } from '@/services/api';
+import { api, UpdateProfileData, getImageUrl, Gender, MaritalStatus, Education, User, Caste, Religion } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState<UpdateProfileData>({
     full_name: '',
     email: '',
-    age: 0,
+    date_of_birth: '',
     gender: Gender.MALE,
     marital_status: MaritalStatus.SINGLE,
     education: Education.NONE,
@@ -28,8 +28,14 @@ export default function ProfilePage() {
     phone_number: '',
     interests_hobbies: '',
     brief_personal_description: '',
-    location: { city: '', state: '' },
-    children_count: 0
+    location: { village: '', tehsil: '', district: '', state: '' },
+    guardian: { name: '', contact: '' },
+    caste: Caste.GENERAL,
+    religion: Religion.HINDU,
+    divorce_finalized: false,
+    children: [],
+    children_count: 0,
+    profile_photo: ''
   });
   const [activeTab, setActiveTab] = useState<'myInterests' | 'receivedInterests'>('myInterests');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -45,7 +51,9 @@ export default function ProfilePage() {
       setFormData({
         full_name: currentUser.full_name || '',
         email: currentUser.email || '',
-        age: currentUser.age,
+        date_of_birth: currentUser.date_of_birth
+          ? new Date(currentUser.date_of_birth).toISOString().slice(0, 10)
+          : '',
         gender: currentUser.gender,
         marital_status: currentUser.marital_status,
         education: currentUser.education,
@@ -54,10 +62,21 @@ export default function ProfilePage() {
         interests_hobbies: currentUser.interests_hobbies || '',
         brief_personal_description: currentUser.brief_personal_description || '',
         location: {
-          city: currentUser.location?.city || '',
+          village: currentUser.location?.village || '',
+          tehsil: currentUser.location?.tehsil || '',
+          district: currentUser.location?.district || '',
           state: currentUser.location?.state || ''
         },
-        children_count: currentUser.children_count
+        guardian: {
+          name: currentUser.guardian?.name || '',
+          contact: currentUser.guardian?.contact || ''
+        },
+        caste: currentUser.caste || Caste.GENERAL,
+        religion: currentUser.religion || Religion.HINDU,
+        divorce_finalized: currentUser.divorce_finalized || false,
+        children: currentUser.children || [],
+        children_count: currentUser.children_count || 0,
+        profile_photo: currentUser.profile_photo || ''
       });
       setProfilePicture(currentUser.profile_photo || null);
       setTempProfilePicture(null);
@@ -87,34 +106,42 @@ export default function ProfilePage() {
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     if (name.startsWith('location.')) {
       const locationKey = name.split('.')[1] as keyof typeof formData.location;
       setFormData(prev => ({
         ...prev,
         location: {
-          ...(prev.location || { city: '', state: '' }),
+          ...(prev.location || { village: '', tehsil: '', district: '', state: '' }),
           [locationKey]: value
         }
       }));
-    } else if (name === 'age' || name === 'children_count') {
-      // Handle numeric fields
-      const numValue = Number(value);
-      if (isNaN(numValue)) {
-        toast.error(`${name === 'age' ? 'Age' : 'Children count'} must be a number`);
-        return;
-      }
-      if (name === 'age' && numValue < 18) {
-        toast.error('Age must be at least 18');
-        return;
-      }
-      if (name === 'children_count' && numValue < 0) {
-        toast.error('Children count cannot be negative');
-        return;
-      }
+    } else if (name.startsWith('guardian.')) {
+      const guardianKey = name.split('.')[1] as keyof typeof formData.guardian;
       setFormData(prev => ({
         ...prev,
-        [name]: numValue
+        guardian: {
+          ...(prev.guardian || { name: '', contact: '' }),
+          [guardianKey]: value
+        }
+      }));
+    } else if (name === 'divorce_finalized') {
+      if (type === 'checkbox') {
+        setFormData(prev => ({
+          ...prev,
+          divorce_finalized: (e.target as HTMLInputElement).checked
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          divorce_finalized: value === 'true'
+        }));
+      }
+    } else if (name === 'children_count') {
+      const numValue = Number(value);
+      setFormData(prev => ({
+        ...prev,
+        children_count: isNaN(numValue) ? 0 : numValue
       }));
     } else {
       setFormData(prev => ({
@@ -208,85 +235,99 @@ export default function ProfilePage() {
     }));
   };
 
+  const handleAddChild = () => {
+    setFormData(prev => ({
+      ...prev,
+      children: [...(prev.children || []), { gender: 'boy', age: 0 }]
+    }));
+  };
+
+  const handleRemoveChild = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      children: (prev.children || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleChildChange = (index: number, field: 'gender' | 'age', value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      children: (prev.children || []).map((child, i) =>
+        i === index ? { ...child, [field]: value } : child
+      )
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-      console.log('Starting profile update...');
-      console.log('Current form data:', formData);
-
       const updateData: UpdateProfileData = {};
       let hasChanges = false;
-
-      // Process each field
       Object.entries(formData).forEach(([key, value]) => {
-        // Skip empty values except for profile_photo and optional text fields
-        if (value === '' && key !== 'profile_photo' && 
-            key !== 'interests_hobbies' && key !== 'brief_personal_description') return;
-
-        // Handle location fields
+        if (value === '' && key !== 'profile_photo' && key !== 'interests_hobbies' && key !== 'brief_personal_description') return;
         if (key === 'location' && typeof value === 'object') {
-          const location = value as { city: string; state: string };
-          if (location.city || location.state) {
-            updateData.location = {
-              city: location.city || '',
-              state: location.state || ''
-            };
+          const location = value as { village: string; tehsil: string; district: string; state: string };
+          if (location.village || location.tehsil || location.district || location.state) {
+            updateData.location = location;
             hasChanges = true;
-            console.log('Added location fields:', updateData.location);
           }
           return;
         }
-
-        // Handle numeric fields
-        if (key === 'age' || key === 'children_count') {
+        if (key === 'guardian' && typeof value === 'object') {
+          const guardian = value as { name: string; contact: string };
+          if (guardian.name || guardian.contact) {
+            updateData.guardian = guardian;
+            hasChanges = true;
+          }
+          return;
+        }
+        if (key === 'children' && Array.isArray(value)) {
+          updateData.children = value;
+          hasChanges = true;
+          return;
+        }
+        if (key === 'children_count') {
           const numValue = Number(value);
           if (!isNaN(numValue)) {
-            updateData[key as 'age' | 'children_count'] = numValue;
+            updateData.children_count = numValue;
             hasChanges = true;
-            console.log(`Added numeric field ${key}:`, numValue);
           }
           return;
         }
-
-        // Handle profile photo
-        if (key === 'profile_photo') {
-          updateData.profile_photo = value.toString();
+        if (key === 'divorce_finalized') {
+          updateData.divorce_finalized = Boolean(value);
           hasChanges = true;
-          console.log('Added profile photo:', value ? 'has value' : 'empty');
           return;
         }
-
-        // Handle other fields
-        if (key === 'full_name' || key === 'email' || 
-            key === 'gender' || key === 'marital_status' || key === 'education' ||
-            key === 'profession' || key === 'phone_number' || 
-            key === 'interests_hobbies' || key === 'brief_personal_description') {
+        if (key === 'profile_photo') {
+          updateData.profile_photo = value?.toString() || '';
+          hasChanges = true;
+          return;
+        }
+        if (key === 'caste' || key === 'religion') {
+          updateData[key] = value;
+          hasChanges = true;
+          return;
+        }
+        if (key === 'date_of_birth') {
+          updateData.date_of_birth = value.toString();
+          hasChanges = true;
+          return;
+        }
+        if (key === 'full_name' || key === 'email' || key === 'gender' || key === 'marital_status' || key === 'education' || key === 'profession' || key === 'phone_number' || key === 'interests_hobbies' || key === 'brief_personal_description') {
           updateData[key] = value.toString();
           hasChanges = true;
-          console.log(`Added field ${key}:`, value);
         }
       });
-
-      // Check if we have any changes
       if (!hasChanges) {
-        console.warn('No changes detected in form data');
         toast.error('No changes to save');
         return;
       }
-
-      console.log('Sending profile update request with data:', updateData);
-
-      // Send the update request
       const response = await api.updateProfile(updateData);
-      console.log('Profile update response:', response);
-
-      // Update local state
       setProfilePicture(response.profile_photo || null);
       setTempProfilePicture(null);
       setIsEditing(false);
       toast.success('Profile updated successfully');
-
     } catch {
       toast.error('Something went wrong');
     }
@@ -297,7 +338,9 @@ export default function ProfilePage() {
       setFormData({
         full_name: currentUser.full_name || '',
         email: currentUser.email || '',
-        age: currentUser.age,
+        date_of_birth: currentUser.date_of_birth
+          ? new Date(currentUser.date_of_birth).toISOString().slice(0, 10)
+          : '',
         gender: currentUser.gender,
         marital_status: currentUser.marital_status,
         education: currentUser.education,
@@ -306,10 +349,21 @@ export default function ProfilePage() {
         interests_hobbies: currentUser.interests_hobbies || '',
         brief_personal_description: currentUser.brief_personal_description || '',
         location: {
-          city: currentUser.location?.city || '',
+          village: currentUser.location?.village || '',
+          tehsil: currentUser.location?.tehsil || '',
+          district: currentUser.location?.district || '',
           state: currentUser.location?.state || ''
         },
-        children_count: currentUser.children_count
+        guardian: {
+          name: currentUser.guardian?.name || '',
+          contact: currentUser.guardian?.contact || ''
+        },
+        caste: currentUser.caste || Caste.GENERAL,
+        religion: currentUser.religion || Religion.HINDU,
+        divorce_finalized: currentUser.divorce_finalized || false,
+        children: currentUser.children || [],
+        children_count: currentUser.children_count || 0,
+        profile_photo: currentUser.profile_photo || ''
       });
     }
     setTempProfilePicture(null);
@@ -413,16 +467,15 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="age" className="text-gray-700">Age</Label>
+                    <Label htmlFor="date_of_birth" className="text-gray-700">Date of Birth</Label>
                     <Input
-                      id="age"
-                      name="age"
-                      type="number"
-                      min="18"
-                      value={formData.age || ''}
+                      id="date_of_birth"
+                      name="date_of_birth"
+                      type="date"
+                      value={formData.date_of_birth}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      placeholder="Enter your age"
+                      placeholder="Enter your date of birth"
                       className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
                     />
                   </div>
@@ -444,15 +497,43 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="location.city" className="text-gray-700">City</Label>
+                    <Label htmlFor="location.village" className="text-gray-700">Village</Label>
                     <Input
-                      id="location.city"
-                      name="location.city"
+                      id="location.village"
+                      name="location.village"
                       type="text"
-                      value={formData.location?.city || ''}
+                      value={formData.location?.village || ''}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      placeholder="Enter your city"
+                      placeholder="Enter your village"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location.tehsil" className="text-gray-700">Tehsil</Label>
+                    <Input
+                      id="location.tehsil"
+                      name="location.tehsil"
+                      type="text"
+                      value={formData.location?.tehsil || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your tehsil"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location.district" className="text-gray-700">District</Label>
+                    <Input
+                      id="location.district"
+                      name="location.district"
+                      type="text"
+                      value={formData.location?.district || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter your district"
                       className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
                     />
                   </div>
@@ -573,6 +654,138 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Guardian, Caste, Religion, Divorce Finalized, Children */}
+              <div className="w-full mt-8">
+                <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Family & Background</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Guardian Name */}
+                  <div>
+                    <Label htmlFor="guardian.name" className="text-gray-700">Guardian Name</Label>
+                    <Input
+                      id="guardian.name"
+                      name="guardian.name"
+                      type="text"
+                      value={formData.guardian?.name || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter guardian's name"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+                  {/* Guardian Contact */}
+                  <div>
+                    <Label htmlFor="guardian.contact" className="text-gray-700">Guardian Contact</Label>
+                    <Input
+                      id="guardian.contact"
+                      name="guardian.contact"
+                      type="text"
+                      value={formData.guardian?.contact || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Enter guardian's contact"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+                  {/* Caste */}
+                  <div>
+                    <Label htmlFor="caste" className="text-gray-700">Caste</Label>
+                    <Select
+                      id="caste"
+                      name="caste"
+                      value={formData.caste || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select caste</option>
+                      <option value={Caste.GENERAL}>General</option>
+                      <option value={Caste.OBC}>OBC</option>
+                      <option value={Caste.SC}>SC</option>
+                      <option value={Caste.ST}>ST</option>
+                      <option value={Caste.OTHER}>Other</option>
+                    </Select>
+                  </div>
+                  {/* Religion */}
+                  <div>
+                    <Label htmlFor="religion" className="text-gray-700">Religion</Label>
+                    <Select
+                      id="religion"
+                      name="religion"
+                      value={formData.religion || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select religion</option>
+                      <option value={Religion.HINDU}>Hindu</option>
+                      <option value={Religion.MUSLIM}>Muslim</option>
+                      <option value={Religion.CHRISTIAN}>Christian</option>
+                      <option value={Religion.SIKH}>Sikh</option>
+                      <option value={Religion.BUDDHIST}>Buddhist</option>
+                      <option value={Religion.JAIN}>Jain</option>
+                      <option value={Religion.OTHER}>Other</option>
+                    </Select>
+                  </div>
+                  {/* Divorce Finalized */}
+                  <div className="md:col-span-2 flex items-center space-x-3 mt-2">
+                    <input
+                      id="divorce_finalized"
+                      name="divorce_finalized"
+                      type="checkbox"
+                      checked={!!formData.divorce_finalized}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    />
+                    <Label htmlFor="divorce_finalized" className="text-gray-700 select-none cursor-pointer">Divorce Finalized</Label>
+                  </div>
+                </div>
+                {/* Children List */}
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-semibold text-indigo-600">Children</h4>
+                    {isEditing && (
+                      <Button type="button" onClick={handleAddChild} className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-md text-sm">Add Child</Button>
+                    )}
+                  </div>
+                  {(formData.children && formData.children.length > 0) ? (
+                    <div className="space-y-4">
+                      {formData.children.map((child, idx) => (
+                        <div key={idx} className="flex items-center space-x-4">
+                          <Select
+                            id={`child-gender-${idx}`}
+                            name={`child-gender-${idx}`}
+                            value={child.gender}
+                            onChange={e => handleChildChange(idx, 'gender', e.target.value)}
+                            disabled={!isEditing}
+                            className="w-32 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                          >
+                            <option value="boy">Boy</option>
+                            <option value="girl">Girl</option>
+                          </Select>
+                          <Input
+                            id={`child-age-${idx}`}
+                            name={`child-age-${idx}`}
+                            type="number"
+                            min="0"
+                            value={child.age}
+                            onChange={e => handleChildChange(idx, 'age', Number(e.target.value))}
+                            disabled={!isEditing}
+                            placeholder="Age"
+                            className="w-24 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                          />
+                          {isEditing && (
+                            <Button type="button" onClick={() => handleRemoveChild(idx)} className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs">Remove</Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No children added.</p>
+                  )}
+                </div>
+              </div>
+
               {/* Additional Information */}
               <div className="w-full mt-8">
                 <h3 className="text-xl font-semibold text-indigo-600 mb-6 border-b border-gray-300 pb-2">Additional Information</h3>
@@ -624,7 +837,17 @@ export default function ProfilePage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Member Since</label>
                     <p className="mt-1 text-gray-900">
-                      {currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString() : 'N/A'}
+                      {currentUser?.created_at
+                        ? new Date(currentUser.created_at).toLocaleDateString()
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Updated At</label>
+                    <p className="mt-1 text-gray-900">
+                      {currentUser?.updated_at
+                        ? new Date(currentUser.updated_at).toLocaleDateString()
+                        : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -876,4 +1099,4 @@ export default function ProfilePage() {
       </div>
     </>
   );
-} 
+}

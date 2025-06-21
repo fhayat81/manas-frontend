@@ -10,21 +10,34 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Gender, MaritalStatus, Education, RegisterData } from '@/services/api';
+import { Gender, MaritalStatus, Education, Caste, Religion, RegisterData } from '@/services/api';
 
 interface RegisterFormData {
   email: string;
   password: string;
   confirm_password: string;
   full_name: string;
-  age: string;
+  date_of_birth: string;
   gender: string;
   marital_status: string;
   education: string;
   location: {
-    city: string;
+    village: string;
+    tehsil: string;
+    district: string;
     state: string;
   };
+  guardian: {
+    name: string;
+    contact: string;
+  };
+  caste: string;
+  religion: string;
+  divorce_finalized: boolean;
+  children: {
+    gender: 'boy' | 'girl';
+    age: number;
+  }[];
   children_count: string;
   profile_photo: string | null;
   profession: string;
@@ -42,14 +55,24 @@ export default function Register() {
     password: '',
     confirm_password: '',
     full_name: '',
-    age: '',
+    date_of_birth: '',
     gender: '',
     marital_status: '',
     education: '',
     location: {
-      city: '',
+      village: '',
+      tehsil: '',
+      district: '',
       state: ''
     },
+    guardian: {
+      name: '',
+      contact: ''
+    },
+    caste: '',
+    religion: '',
+    divorce_finalized: false,
+    children: [],
     children_count: '0',
     profile_photo: null,
     profession: '',
@@ -60,13 +83,40 @@ export default function Register() {
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showDivorceField, setShowDivorceField] = useState(false);
+  const [showChildrenFields, setShowChildrenFields] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Update divorce field visibility based on marital status
+  useEffect(() => {
+    setShowDivorceField(formData.marital_status === 'divorcee');
+    if (formData.marital_status !== 'divorcee') {
+      setFormData(prev => ({ ...prev, divorce_finalized: false }));
+    }
+  }, [formData.marital_status]);
+
+  // Update children fields visibility based on children count
+  useEffect(() => {
+    const count = parseInt(formData.children_count) || 0;
+    setShowChildrenFields(count > 0);
+    if (count === 0) {
+      setFormData(prev => ({ ...prev, children: [] }));
+    } else if (formData.children.length > count) {
+      setFormData(prev => ({ ...prev, children: prev.children.slice(0, count) }));
+    } else if (formData.children.length < count) {
+      const newChildren = [...formData.children];
+      for (let i = formData.children.length; i < count; i++) {
+        newChildren.push({ gender: 'boy', age: 0 });
+      }
+      setFormData(prev => ({ ...prev, children: newChildren }));
+    }
+  }, [formData.children_count, formData.children.length, formData.children]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     
     if (name.startsWith('location.')) {
       const locationField = name.split('.')[1];
@@ -76,6 +126,33 @@ export default function Register() {
           ...prev.location,
           [locationField]: value
         }
+      }));
+    } else if (name.startsWith('guardian.')) {
+      const guardianField = name.split('.')[1];
+      setFormData((prev: RegisterFormData) => ({
+        ...prev,
+        guardian: {
+          ...prev.guardian,
+          [guardianField]: value
+        }
+      }));
+    } else if (name.startsWith('children.')) {
+      const parts = name.split('.');
+      const childIndex = parseInt(parts[1]);
+      const childField = parts[2];
+      setFormData((prev: RegisterFormData) => ({
+        ...prev,
+        children: prev.children.map((child, index) => 
+          index === childIndex 
+            ? { ...child, [childField]: type === 'number' ? parseInt(value) : value }
+            : child
+        )
+      }));
+    } else if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev: RegisterFormData) => ({
+        ...prev,
+        [name]: checked
       }));
     } else {
       setFormData((prev: RegisterFormData) => ({
@@ -180,8 +257,18 @@ export default function Register() {
 
     try {
       // Validate required fields
-      const requiredFields = ['email', 'password', 'confirm_password', 'full_name', 'age', 'gender', 'marital_status', 'education', 'profession', 'phone_number'];
-      const missingFields = requiredFields.filter(field => !formData[field as keyof RegisterFormData]);
+      const requiredFields = ['email', 'password', 'confirm_password', 'full_name', 'date_of_birth', 'gender', 'marital_status', 'education', 'profession', 'phone_number', 'guardian.name', 'guardian.contact', 'caste', 'religion'];
+      const missingFields = requiredFields.filter(field => {
+        if (field.includes('.')) {
+          const [parent, child] = field.split('.');
+          const parentObj = formData[parent as keyof RegisterFormData];
+          if (typeof parentObj === 'object' && parentObj !== null) {
+            return !(parentObj as Record<string, unknown>)[child];
+          }
+          return true;
+        }
+        return !formData[field as keyof RegisterFormData];
+      });
       
       if (missingFields.length > 0) {
         throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
@@ -193,8 +280,13 @@ export default function Register() {
       }
 
       // Validate location fields
-      if (!formData.location.city || !formData.location.state) {
+      if (!formData.location.village || !formData.location.tehsil || !formData.location.district || !formData.location.state) {
         throw new Error('Please fill in all location fields');
+      }
+
+      // Validate guardian fields
+      if (!formData.guardian.name || !formData.guardian.contact) {
+        throw new Error('Please fill in all guardian fields');
       }
 
       // Validate terms and conditions checkbox
@@ -208,13 +300,16 @@ export default function Register() {
       // Format data for API
       const formattedData: RegisterData = {
         ...registrationData,
-        age: parseInt(registrationData.age),
         children_count: parseInt(registrationData.children_count),
         gender: registrationData.gender as Gender,
         marital_status: registrationData.marital_status as MaritalStatus,
         education: registrationData.education as Education,
+        caste: registrationData.caste as Caste,
+        religion: registrationData.religion as Religion,
         location: {
-          city: registrationData.location.city,
+          village: registrationData.location.village,
+          tehsil: registrationData.location.tehsil,
+          district: registrationData.location.district,
           state: registrationData.location.state
         },
         profile_photo: registrationData.profile_photo || '' // Convert null to empty string
@@ -308,17 +403,16 @@ export default function Register() {
                   </div>
 
                   <div>
-                    <Label htmlFor="age" className="text-gray-700">Age *</Label>
+                    <Label htmlFor="date_of_birth" className="text-gray-700">Date of Birth *</Label>
                     <Input
-                      id="age"
-                      name="age"
-                      type="number"
-                      min="18"
+                      id="date_of_birth"
+                      name="date_of_birth"
+                      type="date"
                       required
-                      value={formData.age}
+                      value={formData.date_of_birth}
                       onChange={handleInputChange}
                       disabled={loading}
-                      placeholder="Enter your age"
+                      placeholder="Enter your date of birth"
                       className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
                     />
                   </div>
@@ -341,16 +435,46 @@ export default function Register() {
                   </div>
 
                   <div>
-                    <Label htmlFor="location.city" className="text-gray-700">City *</Label>
+                    <Label htmlFor="location.village" className="text-gray-700">Village *</Label>
                     <Input
-                      id="location.city"
-                      name="location.city"
+                      id="location.village"
+                      name="location.village"
                       type="text"
                       required
-                      value={formData.location.city}
+                      value={formData.location.village}
                       onChange={handleInputChange}
                       disabled={loading}
-                      placeholder="Enter your city"
+                      placeholder="Enter your village"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location.tehsil" className="text-gray-700">Tehsil *</Label>
+                    <Input
+                      id="location.tehsil"
+                      name="location.tehsil"
+                      type="text"
+                      required
+                      value={formData.location.tehsil}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your tehsil"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location.district" className="text-gray-700">District *</Label>
+                    <Input
+                      id="location.district"
+                      name="location.district"
+                      type="text"
+                      required
+                      value={formData.location.district}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter your district"
                       className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
                     />
                   </div>
@@ -405,8 +529,158 @@ export default function Register() {
                       <option value={Education.PHD}>PhD</option>
                     </Select>
                   </div>
+
+                  <div>
+                    <Label htmlFor="guardian.name" className="text-gray-700">Father/Guardian&apos;s Name *</Label>
+                    <Input
+                      id="guardian.name"
+                      name="guardian.name"
+                      type="text"
+                      required
+                      value={formData.guardian.name}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter father/guardian's name"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="guardian.contact" className="text-gray-700">Father/Guardian&apos;s Contact *</Label>
+                    <Input
+                      id="guardian.contact"
+                      name="guardian.contact"
+                      type="tel"
+                      required
+                      value={formData.guardian.contact}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter father/guardian's contact"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="caste" className="text-gray-700">Caste *</Label>
+                    <Select
+                      id="caste"
+                      name="caste"
+                      required
+                      value={formData.caste}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select caste</option>
+                      <option value={Caste.GENERAL}>General</option>
+                      <option value={Caste.OBC}>OBC</option>
+                      <option value={Caste.SC}>SC</option>
+                      <option value={Caste.ST}>ST</option>
+                      <option value={Caste.OTHER}>Other</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="religion" className="text-gray-700">Religion *</Label>
+                    <Select
+                      id="religion"
+                      name="religion"
+                      required
+                      value={formData.religion}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select religion</option>
+                      <option value={Religion.HINDU}>Hindu</option>
+                      <option value={Religion.MUSLIM}>Muslim</option>
+                      <option value={Religion.CHRISTIAN}>Christian</option>
+                      <option value={Religion.SIKH}>Sikh</option>
+                      <option value={Religion.BUDDHIST}>Buddhist</option>
+                      <option value={Religion.JAIN}>Jain</option>
+                      <option value={Religion.OTHER}>Other</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="children_count" className="text-gray-700">Number of Children</Label>
+                    <Input
+                      id="children_count"
+                      name="children_count"
+                      type="number"
+                      min="0"
+                      value={formData.children_count}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="Enter number of children"
+                      className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Conditional Divorce Field */}
+              {showDivorceField && (
+                <div className="mt-6">
+                  <div className="flex items-center">
+                    <input
+                      id="divorce_finalized"
+                      name="divorce_finalized"
+                      type="checkbox"
+                      checked={formData.divorce_finalized}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <Label htmlFor="divorce_finalized" className="ml-2 text-gray-700">
+                      Has the divorce been legally finalized?
+                    </Label>
+                  </div>
+                </div>
+              )}
+
+              {/* Children Details */}
+              {showChildrenFields && formData.children.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">Children Details</h3>
+                  <div className="space-y-4">
+                    {formData.children.map((child, index) => (
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg">
+                        <div>
+                          <Label htmlFor={`children.${index}.gender`} className="text-gray-700">Child {index + 1} Gender</Label>
+                          <Select
+                            id={`children.${index}.gender`}
+                            name={`children.${index}.gender`}
+                            required
+                            value={child.gender}
+                            onChange={handleInputChange}
+                            disabled={loading}
+                            className="mt-1 bg-white border-gray-300 text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                          >
+                            <option value="boy">Boy</option>
+                            <option value="girl">Girl</option>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor={`children.${index}.age`} className="text-gray-700">Child {index + 1} Age</Label>
+                          <Input
+                            id={`children.${index}.age`}
+                            name={`children.${index}.age`}
+                            type="number"
+                            min="0"
+                            required
+                            value={child.age}
+                            onChange={handleInputChange}
+                            disabled={loading}
+                            placeholder="Enter age"
+                            className="mt-1 bg-white border-gray-300 text-gray-600 placeholder-gray-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Contact & Status */}
               <div className="w-full mt-8">

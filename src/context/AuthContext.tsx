@@ -1,27 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, User, Gender, MaritalStatus, Education } from '@/services/api';
-
-interface RegisterData {
-  full_name: string;
-  email: string;
-  password: string;
-  age: number;
-  gender: Gender;
-  marital_status: MaritalStatus;
-  education: Education;
-  profession: string;
-  phone_number: string;
-  interests_hobbies?: string;
-  brief_personal_description?: string;
-  location: {
-    city: string;
-    state: string;
-  };
-  children_count: number;
-  profile_photo: string;
-}
+import { api, User, type RegisterData } from '@/services/api';
 
 interface LoginData {
   username_or_email: string;

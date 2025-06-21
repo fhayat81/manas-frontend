@@ -8,7 +8,7 @@ import { ImpactCardType } from '@/types/cards';
 
 interface PageProps {
   params: Promise<{
-    slug: string;
+    slug: string; // This will actually be the ID
   }>;
 }
 
@@ -22,7 +22,8 @@ export default function ImpactDetailPage({ params }: PageProps) {
       const { slug } = await params;
       try {
         const cards = await api.fetchImpactCards();
-        const found = cards.find((c: ImpactCardType) => c.link === `/impact/${slug}`);
+        // Find card by ID instead of by link
+        const found = cards.find((c: ImpactCardType) => c.id.toString() === slug);
         setCard(found || null);
       } catch (e) {
         console.error(e);

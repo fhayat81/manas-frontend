@@ -36,35 +36,31 @@ export default function GetInvolved() {
               Become a volunteer and be part of our mission to empower women. Your time and skills can change
               lives and bring hope to those in need.
             </p>
-            <Link href="#" className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">
+            <Link href="/get-involved/volunteer" className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">
               Learn More
             </Link>
           </div>
 
-          {/* Card 2: Share Your Story */}
+          {/* Card 2: Share Your Problem */}
           <div className="bg-white rounded-lg shadow-lg p-8 text-center flex flex-col items-center hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
             <FaBookOpen className="text-6xl text-indigo-600 mb-6" />
-            <h2 className="text-2xl font-bold text-indigo-800 mb-3">Share Your Story</h2>
+            <h2 className="text-2xl font-bold text-indigo-800 mb-3">Share Your Problem</h2>
             <p className="text-gray-700 mb-6 flex-grow">
-              Share your story of empowerment and resilience with us. Your journey can inspire and motivate
-              others going through similar experiences.
+              Facing a challenge or need support? Share your problem with us confidentially. Our team is here to listen and help you find the right resources or guidance for your situation.
             </p>
-            <Link href="#" className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">
+            <Link href="/contact" className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">
               Share Now
             </Link>
           </div>
 
-          {/* Card 3: Attend Our Events */}
+          {/* Card 3: Apply For Job */}
           <div className="bg-white rounded-lg shadow-lg p-8 text-center flex flex-col items-center hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
             <FaCalendarAlt className="text-6xl text-indigo-600 mb-6" />
-            <h2 className="text-2xl font-bold text-indigo-800 mb-3">Attend Our Events</h2>
+            <h2 className="text-2xl font-bold text-indigo-800 mb-3">Apply For Job</h2>
             <p className="text-gray-700 mb-6 flex-grow">
-              Join our events to connect with like-minded individuals and support our cause. Together, we
-              can create a strong community of support and understanding.
+              We are working on new job opportunities to empower our community. Stay tuned for updates on how you can apply and become a part of our mission. Opportunities coming soon!
             </p>
-            <Link href="#" className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">
-              Get Updates
-            </Link>
+            <span className="inline-block px-6 py-3 bg-indigo-100 text-indigo-700 font-semibold rounded-md cursor-not-allowed">Upcoming feature</span>
           </div>
         </div>
       </section>
@@ -92,7 +88,7 @@ export default function GetInvolved() {
                       {event.registerLink && event.registerLink.trim() !== '' ? (
                         <Link
                           href={event.registerLink}
-                          className="px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition"
+                          className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition"
                           target="_blank"
                           rel="noopener noreferrer"
                         >

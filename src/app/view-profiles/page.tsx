@@ -52,7 +52,7 @@ export default function ViewProfilesPage() {
   }, [allProfiles]);
 
   const uniqueCities = useMemo(() => {
-    return extractUniqueValues(allProfiles, (profile) => profile.location?.city);
+    return extractUniqueValues(allProfiles, (profile) => profile.location?.village);
   }, [allProfiles]);
 
   const uniqueProfessions = useMemo(() => {
@@ -342,14 +342,15 @@ export default function ViewProfilesPage() {
                     </div>
                   </div>
                   <div className="p-6 space-y-4 text-gray-700">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <span>📅 {new Date(profile.date_of_birth).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span>👤 {profile.gender}</span>
+                      <span>•</span>
+                      <span>💼 {profile.profession}</span>
+                    </div>
                     <p className="text-sm">
-                      <span className="font-semibold">Age:</span> {profile.age} years
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Location:</span> {profile.location?.city}, {profile.location?.state}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Profession:</span> {profile.profession}
+                      <span className="font-semibold">Location:</span> {profile.location?.village}, {profile.location?.tehsil}, {profile.location?.district}, {profile.location?.state}
                     </p>
                     <p className="text-sm">
                       <span className="font-semibold">Education:</span> {profile.education}

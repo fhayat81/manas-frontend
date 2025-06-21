@@ -85,7 +85,10 @@ const Navbar = () => {
                 </button>
               )
             ))}
-            <button className="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+            <button 
+              className="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+              onClick={() => toast('Feature coming soon')}
+            >
               Donate
             </button>
             {authLinks.map((link) => (
@@ -170,7 +173,10 @@ const Navbar = () => {
               </button>
             )
           ))}
-          <button className="w-full mt-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+          <button 
+            className="w-full mt-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+            onClick={() => toast('Feature coming soon')}
+          >
             Donate
           </button>
           {authLinks.map((link) => (
