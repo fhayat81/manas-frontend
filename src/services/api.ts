@@ -161,6 +161,7 @@ export interface ProfilesResponse {
 }
 
 export interface ProfileFilters {
+  name?: string;
   location?: string;
   profession?: string;
   search?: string;

@@ -34,6 +34,7 @@ export default function ViewProfilesPage() {
   const [profiles, setProfiles] = useState<User[]>([]);
   const [pagination, setPagination] = useState<ProfilesResponse['pagination'] | null>(null);
   const [filters, setFilters] = useState<ProfileFilters>({
+    name: '',
     location: '',
     profession: '',
     search: '',
@@ -119,6 +120,7 @@ export default function ViewProfilesPage() {
 
   const clearFilters = () => {
     const emptyFilters: ProfileFilters = {
+      name: '',
       location: '',
       profession: '',
       search: '',
@@ -181,7 +183,19 @@ export default function ViewProfilesPage() {
 
         {/* Filter Section */}
         <div className="bg-white shadow-lg rounded-lg p-6 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                value={filters.name || ''}
+                onChange={handleFilterChange}
+                placeholder="Search by name..."
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
+              />
+            </div>
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location (Search across village, tehsil, district, state)</label>
               <Input
