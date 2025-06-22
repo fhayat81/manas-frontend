@@ -9,9 +9,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { extractUniqueValues, filterProfiles } from '@/utils/fuzzySearch';
-import { SearchableSelect } from '@/components/SearchableSelect';
-import { SmartLocationSelect } from '@/components/SmartLocationSelect';
+import { filterProfiles } from '@/utils/fuzzySearch';
 
 // Debounce hook for search
 function useDebounce<T>(value: T, delay: number): T {
@@ -34,30 +32,17 @@ export default function ViewProfilesPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profiles, setProfiles] = useState<User[]>([]);
-  const [allProfiles, setAllProfiles] = useState<User[]>([]); // Store all profiles for filtering
   const [pagination, setPagination] = useState<ProfilesResponse['pagination'] | null>(null);
   const [filters, setFilters] = useState<ProfileFilters>({
     location: '',
-    ageRange: '',
     profession: '',
     search: '',
+    yearOfBirthFrom: '',
+    yearOfBirthTo: '',
   });
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce
-
-  // Extract unique values for filter dropdowns
-  const uniqueStates = useMemo(() => {
-    return extractUniqueValues(allProfiles, (profile) => profile.location?.state);
-  }, [allProfiles]);
-
-  const uniqueCities = useMemo(() => {
-    return extractUniqueValues(allProfiles, (profile) => profile.location?.village);
-  }, [allProfiles]);
-
-  const uniqueProfessions = useMemo(() => {
-    return extractUniqueValues(allProfiles, (profile) => profile.profession);
-  }, [allProfiles]);
 
   // Filter profiles based on debounced search query
   const filteredProfiles = useMemo(() => {
@@ -71,7 +56,6 @@ export default function ViewProfilesPage() {
     setLoadingProfiles(true);
     try {
       const activeFilters = currentFilters || filters;
-      console.log('Fetching profiles with filters:', activeFilters);
       
       const response = await api.getAllProfiles(activeFilters);
       setProfiles(response.profiles);
@@ -91,26 +75,14 @@ export default function ViewProfilesPage() {
     }
   }, [filters]);
 
-  // Fetch all profiles for filter options (without pagination)
-  const fetchAllProfilesForFilters = useCallback(async () => {
-    try {
-      const response = await api.getAllProfiles({ limit: 1000 }); // Get a large number for filter options
-      setAllProfiles(response.profiles);
-    } catch (error) {
-      console.error('Failed to fetch all profiles for filters:', error);
-      // Don't show error toast for this, as it's not critical
-    }
-  }, []);
-
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
     if (user) {
       fetchProfiles();
-      fetchAllProfilesForFilters(); // Fetch all profiles for filter options
     }
-  }, [user, loading, router, fetchProfiles, fetchAllProfilesForFilters]);
+  }, [user, loading, router, fetchProfiles]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -118,10 +90,6 @@ export default function ViewProfilesPage() {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
   };
 
   // Keyboard shortcuts
@@ -152,9 +120,10 @@ export default function ViewProfilesPage() {
   const clearFilters = () => {
     const emptyFilters: ProfileFilters = {
       location: '',
-      ageRange: '',
       profession: '',
       search: '',
+      yearOfBirthFrom: '',
+      yearOfBirthTo: '',
     };
     setFilters(emptyFilters);
     setSearchQuery('');
@@ -212,74 +181,35 @@ export default function ViewProfilesPage() {
 
         {/* Filter Section */}
         <div className="bg-white shadow-lg rounded-lg p-6 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <SmartLocationSelect
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location (Search across village, tehsil, district, state)</label>
+              <Input
                 id="location"
                 name="location"
+                type="text"
                 value={filters.location || ''}
                 onChange={handleFilterChange}
-                states={uniqueStates}
-                cities={uniqueCities}
-                placeholder="Type to search states or cities..."
+                placeholder="Search location..."
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
-                label="Location"
               />
             </div>
-
             <div>
-              <label htmlFor="ageRange" className="block text-sm font-medium text-gray-700">Age Range</label>
+              <label htmlFor="profession" className="block text-sm font-medium text-gray-700">Profession</label>
               <Select
-                id="ageRange"
-                name="ageRange"
-                value={filters.ageRange}
-                onChange={handleFilterChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
-              >
-                <option value="">All Ages</option>
-                <option value="18-25">18-25</option>
-                <option value="26-35">26-35</option>
-                <option value="36-45">36-45</option>
-                <option value="46+">46+</option>
-              </Select>
-            </div>
-
-            <div>
-              <SearchableSelect
                 id="profession"
                 name="profession"
                 value={filters.profession || ''}
                 onChange={handleFilterChange}
-                options={uniqueProfessions}
-                placeholder="Type to search professions..."
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
-                label="Profession"
-              />
-            </div>
-
-            <div className="md:col-span-1">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 sr-only">Search profiles...</label>
-              <div className="relative">
-                <Input
-                  id="search"
-                  name="search"
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  placeholder="Search by name, profession, location... (Ctrl+K)"
-                  className="mt-1 block w-full text-gray-600 pr-10"
-                />
-                {searchQuery !== debouncedSearchQuery && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                  </div>
-                )}
-              </div>
-              {searchQuery && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Search across names, professions, and locations • Press Esc to clear
-                </p>
-              )}
+              >
+                <option value="">Select a profession</option>
+                {/* {uniqueProfessions.map((profession) => (
+                  <option key={profession} value={profession}>
+                    {profession}
+                  </option>
+                ))} */}
+              </Select>
             </div>
           </div>
           <div className="mt-6 text-right space-x-4">

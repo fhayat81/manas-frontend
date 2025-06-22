@@ -162,9 +162,10 @@ export interface ProfilesResponse {
 
 export interface ProfileFilters {
   location?: string;
-  ageRange?: string;
   profession?: string;
   search?: string;
+  yearOfBirthFrom?: string;
+  yearOfBirthTo?: string;
   gender?: Gender;
   marital_status?: MaritalStatus;
   education?: Education;
@@ -204,8 +205,6 @@ const getToken = (): string => {
 export const api = {
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      console.log('Attempting registration with data:', { ...data, password: '[REDACTED]' });
-      console.log('Registration URL:', `${API_URL}/auth/register`);
       
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
@@ -349,10 +348,7 @@ export const api = {
 
       const url = `${API_URL}/users/profiles${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       
-      console.log('API Request URL:', url);
-      console.log('API Request filters:', filters);
-      console.log('API Request query params:', queryParams.toString());
-      
+    
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -373,7 +369,6 @@ export const api = {
       }
 
       const data = await response.json();
-      console.log('API Success response:', data);
       return data;
     } catch (error) {
       console.error('Get all profiles error:', error);
@@ -515,8 +510,6 @@ export const api = {
     try {
       console.log('Starting profile update request...');
       console.log('API URL:', `${API_URL}/users/profile`);
-      console.log('Request method:', 'PUT');
-      console.log('Data being sent:', data);
 
       const token = getToken();
       console.log('Using token:', token ? 'Token exists' : 'No token');
@@ -532,7 +525,6 @@ export const api = {
       });
 
       console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       // Get the raw response text first
       const responseText = await response.text();
@@ -651,7 +643,6 @@ export const api = {
     availability: string;
     experience: string;
   }): Promise<{ message: string }> {
-    console.log('API: Submitting volunteer data to backend:', data);
     
     try {
       const controller = new AbortController();

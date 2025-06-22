@@ -563,7 +563,7 @@ export default function Register() {
                   {/* Message for users who do not want to fill guardian details */}
                   <div className="md:col-span-2">
                     <p className="text-sm text-gray-500 mt-1">
-                      If you do not wish to provide guardian details, you can proceed by entering <span className="font-semibold">"NA"</span> in these fields.
+                      If you do not wish to provide guardian details, you can proceed by entering <span className="font-semibold">&quot;NA&quot;</span> in these fields.
                     </p>
                   </div>
                   

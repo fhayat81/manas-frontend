@@ -74,8 +74,6 @@ export default function VolunteerFormPage() {
       areas: form.areas || []
     };
     
-    console.log('Submitting volunteer data:', submitData);
-    
     try {
       await api.submitVolunteerForm(submitData);
       setSuccess(true);
