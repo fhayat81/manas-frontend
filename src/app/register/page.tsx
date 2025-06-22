@@ -560,6 +560,13 @@ export default function Register() {
                     />
                   </div>
 
+                  {/* Message for users who do not want to fill guardian details */}
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-gray-500 mt-1">
+                      If you do not wish to provide guardian details, you can proceed by entering <span className="font-semibold">"NA"</span> in these fields.
+                    </p>
+                  </div>
+                  
                   <div>
                     <Label htmlFor="caste" className="text-gray-700">Caste *</Label>
                     <Select
