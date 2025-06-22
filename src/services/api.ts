@@ -164,12 +164,16 @@ export interface ProfileFilters {
   name?: string;
   location?: string;
   profession?: string;
+  ageFrom?: string;
+  ageTo?: string;
   search?: string;
   yearOfBirthFrom?: string;
   yearOfBirthTo?: string;
   gender?: Gender;
   marital_status?: MaritalStatus;
   education?: Education;
+  caste?: Caste;
+  religion?: Religion;
   limit?: number;
   page?: number;
 }

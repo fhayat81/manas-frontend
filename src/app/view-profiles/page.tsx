@@ -3,9 +3,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { api, User, ProfileFilters, ProfilesResponse, getImageUrl } from '@/services/api';
+import { api, User, ProfileFilters, ProfilesResponse, getImageUrl, Education, Caste, Religion } from '@/services/api';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -37,9 +36,14 @@ export default function ViewProfilesPage() {
     name: '',
     location: '',
     profession: '',
-    search: '',
+    ageFrom: '',
+    ageTo: '',
     yearOfBirthFrom: '',
     yearOfBirthTo: '',
+    caste: undefined,
+    religion: undefined,
+    education: undefined,
+    search: '',
   });
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -115,7 +119,22 @@ export default function ViewProfilesPage() {
   }, [searchQuery]);
 
   const applyFilters = () => {
-    fetchProfiles(filters);
+    // Convert age range to year of birth range
+    const currentYear = new Date().getFullYear();
+    let yearOfBirthFrom = filters.yearOfBirthFrom;
+    let yearOfBirthTo = filters.yearOfBirthTo;
+    if (filters.ageFrom) {
+      yearOfBirthTo = (currentYear - parseInt(filters.ageFrom)).toString();
+    }
+    if (filters.ageTo) {
+      yearOfBirthFrom = (currentYear - parseInt(filters.ageTo)).toString();
+    }
+    const filtersToSend = {
+      ...filters,
+      yearOfBirthFrom,
+      yearOfBirthTo,
+    };
+    fetchProfiles(filtersToSend);
   };
 
   const clearFilters = () => {
@@ -123,9 +142,14 @@ export default function ViewProfilesPage() {
       name: '',
       location: '',
       profession: '',
-      search: '',
+      ageFrom: '',
+      ageTo: '',
       yearOfBirthFrom: '',
       yearOfBirthTo: '',
+      caste: undefined,
+      religion: undefined,
+      education: undefined,
+      search: '',
     };
     setFilters(emptyFilters);
     setSearchQuery('');
@@ -183,7 +207,7 @@ export default function ViewProfilesPage() {
 
         {/* Filter Section */}
         <div className="bg-white shadow-lg rounded-lg p-6 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-8 gap-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
               <Input
@@ -210,20 +234,95 @@ export default function ViewProfilesPage() {
             </div>
             <div>
               <label htmlFor="profession" className="block text-sm font-medium text-gray-700">Profession</label>
-              <Select
+              <Input
                 id="profession"
                 name="profession"
+                type="text"
                 value={filters.profession || ''}
                 onChange={handleFilterChange}
+                placeholder="Search by profession..."
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
+              />
+            </div>
+            <div>
+              <label htmlFor="ageFrom" className="block text-sm font-medium text-gray-700">Age (From)</label>
+              <Input
+                id="ageFrom"
+                name="ageFrom"
+                type="number"
+                min="0"
+                value={filters.ageFrom || ''}
+                onChange={handleFilterChange}
+                placeholder="Min age"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
+              />
+            </div>
+            <div>
+              <label htmlFor="ageTo" className="block text-sm font-medium text-gray-700">Age (To)</label>
+              <Input
+                id="ageTo"
+                name="ageTo"
+                type="number"
+                min="0"
+                value={filters.ageTo || ''}
+                onChange={handleFilterChange}
+                placeholder="Max age"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
+              />
+            </div>
+            <div>
+              <label htmlFor="caste" className="block text-sm font-medium text-gray-700">Caste</label>
+              <select
+                id="caste"
+                name="caste"
+                value={filters.caste ?? ''}
+                onChange={e => setFilters(prev => ({ ...prev, caste: e.target.value ? e.target.value as Caste : undefined }))}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
               >
-                <option value="">Select a profession</option>
-                {/* {uniqueProfessions.map((profession) => (
-                  <option key={profession} value={profession}>
-                    {profession}
-                  </option>
-                ))} */}
-              </Select>
+                <option value="">All Castes</option>
+                <option value={Caste.GENERAL}>General</option>
+                <option value={Caste.OBC}>OBC</option>
+                <option value={Caste.SC}>SC</option>
+                <option value={Caste.ST}>ST</option>
+                <option value={Caste.OTHER}>Other</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="religion" className="block text-sm font-medium text-gray-700">Religion</label>
+              <select
+                id="religion"
+                name="religion"
+                value={filters.religion ?? ''}
+                onChange={e => setFilters(prev => ({ ...prev, religion: e.target.value ? e.target.value as Religion : undefined }))}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
+              >
+                <option value="">All Religions</option>
+                <option value={Religion.HINDU}>Hindu</option>
+                <option value={Religion.MUSLIM}>Muslim</option>
+                <option value={Religion.CHRISTIAN}>Christian</option>
+                <option value={Religion.SIKH}>Sikh</option>
+                <option value={Religion.BUDDHIST}>Buddhist</option>
+                <option value={Religion.JAIN}>Jain</option>
+                <option value={Religion.OTHER}>Other</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="education" className="block text-sm font-medium text-gray-700">Education</label>
+              <select
+                id="education"
+                name="education"
+                value={filters.education ?? ''}
+                onChange={e => setFilters(prev => ({ ...prev, education: e.target.value ? e.target.value as Education : undefined }))}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-600"
+              >
+                <option value="">All Education Levels</option>
+                <option value={Education.NONE}>None</option>
+                <option value={Education.PRIMARY_SCHOOL}>Primary School</option>
+                <option value={Education.HIGH_SCHOOL}>High School</option>
+                <option value={Education.BACHELORS}>Bachelor&apos;s Degree</option>
+                <option value={Education.MASTERS}>Master&apos;s Degree</option>
+                <option value={Education.PHD}>PhD</option>
+              </select>
             </div>
           </div>
           <div className="mt-6 text-right space-x-4">
