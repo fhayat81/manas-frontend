@@ -34,8 +34,10 @@ export default function Footer() {
             <ul className="space-y-2">
               <li><Link href="/" className="hover:text-indigo-600 transition">Home</Link></li>
               <li><Link href="/about" className="hover:text-indigo-600 transition">About Us</Link></li>
-              <li><Link href="/register" className="hover:text-indigo-600 transition">Register</Link></li>
-              <li><Link href="/profiles" className="hover:text-indigo-600 transition">View Profiles</Link></li>
+              <li><Link href="/view-profiles" className="hover:text-indigo-600 transition">View Profiles</Link></li>
+              <li><Link href="/get-involved" className="hover:text-indigo-600 transition">Get Involved</Link></li>
+              <li><Link href="/media" className="hover:text-indigo-600 transition">Media</Link></li>
+              <li><Link href="/contact" className="hover:text-indigo-600 transition">Contact</Link></li>
             </ul>
           </div>
 
