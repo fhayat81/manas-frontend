@@ -152,7 +152,7 @@ export default function About() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">GN</div>
               <h3 className="text-2xl font-bold text-indigo-900 mb-1">Ganesh Nikam</h3>
               <div className="text-indigo-600 font-semibold mb-2">Vice President</div>
-              <p className="text-indigo-800">Reputed News Reporter</p>
+              {/* <p className="text-indigo-800">Reputed News Reporter</p> */}
             </div>
             {/* Team Member 3 */}
             <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
