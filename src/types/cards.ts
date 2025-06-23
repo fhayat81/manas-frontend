@@ -4,7 +4,6 @@ export interface ImpactCardType {
   title: string;
   description: string;
   imageUrl: string;
-  link: string;
   detailedDescription: string; // HTML content for the detailed page
 }
 
@@ -34,6 +33,5 @@ export interface MediaCardType {
   source: string;
   description: string;
   imageUrl: string;
-  link: string;
   detailedDescription: string;
 } 
