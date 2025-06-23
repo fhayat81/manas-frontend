@@ -159,7 +159,6 @@ export default function About() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 flex items-center justify-center text-2xl font-bold text-white mb-6">SP</div>
               <h3 className="text-2xl font-bold text-indigo-900 mb-1">Shahina Pathan</h3>
               <div className="text-indigo-600 font-semibold mb-2">Treasurer</div>
-              <p className="text-indigo-800">Women&apos;s rights advocate with 25+ years experience in social work and women empowerment</p>
             </div>
             {/* Team Member 4 */}
             <div className="bg-white rounded-2xl border border-indigo-100 shadow-md p-8 flex flex-col items-center text-center transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
@@ -185,7 +184,7 @@ export default function About() {
               <p className="text-indigo-800 mb-4">Skills training program helping women develop employable skills</p>
               <div className="flex flex-wrap gap-2">
                 {/* <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">150 beneficiaries</span> */}
-                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">6-month programs</span>
+                {/* <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">6-month programs</span> */}
               </div>
             </div>
             {/* Program 2 */}
